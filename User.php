@@ -16,7 +16,7 @@ class User {
 		$s -> bindParam(':id', $id);
 		$s -> bindParam(':name', $name);
 		$s -> bindParam(':balance', $balance);
-		$s -> execute();
+		return $s -> execute();
 	}
 
 	public function getName() {
