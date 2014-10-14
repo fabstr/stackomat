@@ -132,15 +132,26 @@ class Stackomat {
 	private function handlePurchase($firstProduct) {
 		echo "Scanna ytterligare 0 eller fler varor. Scanna sedan ditt id för att betala.\n";
 
+		$p = Product::fromId($this -> db, $firstProduct);
+		echo $p -> getName() . ': ' . $p -> getCost() . "\n";
+
 		$products = $this -> collectUntil(
 			function() {$this -> printPromptInner(); return $this -> readInput();}, 
-			function($e) {return $this -> isProduct($e);},
+			function($e) {
+				$res = $this -> isProduct($e);
+				if ($res) {
+					$p = Product::fromId($this -> db, $e);
+					echo $p -> getName() . ': ' . $p -> getCost() . "\n";
+				}
+				return $res;
+			},
 			array($firstProduct)
 		);
 
 		$id = $products[1];
 		$products = $products[0];
 
+		echo 'Läste id: ' . $id . "\n";
 		if (!$this -> isUser($id)) {
 			throw new Exception('Ditt id kunde inte hittas i '
 				.'databasen.');
@@ -190,17 +201,25 @@ class Stackomat {
 
 	private function handleAddBalance($firstBalance) {
 		echo "Scanna 0 eller fler ladda-koder. Scanna sedan ditt id för att slutföra \nladdningen.\n";
+		echo 'Laddar ' . $this -> sumFromBalanceCode($firstBalance) . "\n";
 
 		$balances = $this -> collectUntil(
 			function() {$this -> printPromptInner(); return $this -> readInput();},
-			function($e) {return $this -> isAddBalance($e);},
+			function($e) {
+				$res = $this -> isAddBalance($e);
+				if ($res) {
+					echo 'Laddar ytterligare ' . $this -> sumFromBalanceCode($e) . "\n";
+				}
+				return $res;
+
+			},
 			array($firstBalance)
 		);
 
 		$id = $balances[1];
 		$balances = $balances[0];
 
-
+		echo 'Läste id: ' . $id . "\n";
 		if (!$this -> isUser($id)) {
 			throw new Exception('Ditt id kunde inte hittas i '
 				.'databasen.');
@@ -223,6 +242,7 @@ class Stackomat {
 		echo "Scanna ditt id för att visa saldo:\n";
 		$this -> printPromptInner();
 		$id = $this -> readInput();
+		echo 'Läste id: ' . $id . "\n";
 
 		if (!$this -> isUser($id)) {
 			throw new Exception('Ditt id kunde inte hittas i ' 
@@ -238,6 +258,7 @@ class Stackomat {
 		echo "Scanna ditt id för att lägga till dig som användare:\n";
 		$this -> printPromptInner();
 		$id = $this -> readInput();
+		echo 'Läste id: ' . $id . "\n";
 
 		if ($this -> isCommand($id)) {
 			$this -> printRed("id:t är ett kommando, kommandon får "
@@ -266,6 +287,7 @@ class Stackomat {
 		echo "Scanna ditt id för att ångra det senaste köpet:\n";
 		$this -> printPromptInner();
 		$id = $this -> readInput();
+		echo 'Läste id: ' . $id . "\n";
 		if (!$this -> isUser($id)) {
 			throw new Exception("Id:t finns inte i databasen.");
 		}
@@ -302,6 +324,13 @@ class Stackomat {
 	}
 
 	public function run() {
+		exec('/bin/stty -g', $stty);
+		exec('/bin/stty -echo');
+		//pcntl_signal(SIGINT, function ($signal) {
+			//exec('/bin/stty -g ' . $stty[0]);
+			//echo "bye!\n";
+			//exit(0);
+		//});
 		for (;;) {
 			try {
 				$this -> doRound();
@@ -309,6 +338,7 @@ class Stackomat {
 				$this -> printRed($e -> getMessage());
 			}
 		}
+		exec('/bin/stty -g ' . $stty[0]);
 	}
 }
 
