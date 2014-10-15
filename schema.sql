@@ -1,5 +1,5 @@
 CREATE TABLE users (
-	id TEXT 
+	id VARCHAR(255) 
 	   PRIMARY KEY 
 	   NOT NULL 
 	   UNIQUE,
@@ -12,7 +12,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE products (
-	id TEXT 
+	id VARCHAR(255) 
 	   PRIMARY KEY 
 	   NOT NULL 
 	   UNIQUE,
@@ -24,7 +24,7 @@ CREATE TABLE products (
 );
 
 CREATE TABLE lastPurchase (
-	id TEXT 
+	id VARCHAR(255) 
 	   PRIMARY KEY 
 	   NOT NULL 
 	   UNIQUE 
