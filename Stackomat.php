@@ -79,20 +79,6 @@ class Stackomat {
 
 		return array($initial, $input);
 	}
-	private function isProduct($id) {
-		$s = $this -> db -> prepare('SELECT COUNT(*) AS cnt FROM products WHERE id=:id');
-		$s -> bindParam(':id', $id);
-		$res = $s -> execute() -> fetchArray();
-		return $res['cnt'] > 0;
-	}
-
-	private function isUser($id) {
-		$s = $this -> db -> prepare('SELECT *, COUNT(*) AS cnt FROM users WHERE id=:id');
-		$s -> bindParam(':id', $id);
-		$res = $s -> execute() -> fetchArray();
-		return $res['cnt'] > 0;
-	}
-
 	private function isAddBalance($str) {
 		switch ($str) {
 		case '13370028':
@@ -138,7 +124,7 @@ class Stackomat {
 		$products = $this -> collectUntil(
 			function() {$this -> printPromptInner(); return $this -> readInput();}, 
 			function($e) {
-				$res = $this -> isProduct($e);
+				$res = Product::isProduct($e);
 				if ($res) {
 					$p = Product::fromId($this -> db, $e);
 					echo $p -> getName() . ': ' . $p -> getCost() . "\n";
@@ -152,7 +138,7 @@ class Stackomat {
 		$products = $products[0];
 
 		echo 'Läste id: ' . $id . "\n";
-		if (!$this -> isUser($id)) {
+		if (!User::isUser($id)) {
 			throw new Exception('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
@@ -220,7 +206,7 @@ class Stackomat {
 		$balances = $balances[0];
 
 		echo 'Läste id: ' . $id . "\n";
-		if (!$this -> isUser($id)) {
+		if (!User::isUser($id)) {
 			throw new Exception('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
@@ -244,7 +230,7 @@ class Stackomat {
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
 
-		if (!$this -> isUser($id)) {
+		if (!User::isUser($id)) {
 			throw new Exception('Ditt id kunde inte hittas i ' 
 				.'databasen.');
 		}
@@ -264,11 +250,11 @@ class Stackomat {
 			$this -> printRed("id:t är ett kommando, kommandon får "
 				."inte läggas till som användare.\n");
 
-		} else if ($this -> isUser($id)) {
+		} else if (User::isUser($id)) {
 			$this -> printRed("Du kunde inte läggas till i "
 				."databasen: id:t finns redan.\n");
 
-		} else if ($this -> isProduct($id)) {
+		} else if (Product::isProduct($id)) {
 			$this -> printRed("id:t finns redan som produkt, "
 				."produkter får inte läggas till som "
 				."användare.\n");
@@ -288,7 +274,7 @@ class Stackomat {
 		$this -> printPromptInner();
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
-		if (!$this -> isUser($id)) {
+		if (!User::isUser($id)) {
 			throw new Exception("Id:t finns inte i databasen.");
 		}
 
@@ -308,7 +294,7 @@ class Stackomat {
 		$action = $this -> readInput(false);
 		if ($action == 0) return;
 
-		if ($this -> isProduct($action)) {
+		if (Product::isProduct($action)) {
 			$this -> handlePurchase($action);
 		} else if ($this -> isAddBalance($action)) {
 			$this -> handleAddBalance($action);

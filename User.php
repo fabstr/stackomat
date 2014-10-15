@@ -19,6 +19,14 @@ class User {
 		return $s -> execute();
 	}
 
+	private static function isUser($id) {
+		$s = $this -> db -> prepare('SELECT *, COUNT(*) AS cnt FROM users WHERE id=:id');
+		$s -> bindParam(':id', $id);
+		$res = $s -> execute() -> fetchArray();
+		return $res['cnt'] > 0;
+	}
+
+
 	public function getName() {
 		$s = $this -> db -> prepare('SELECT name FROM users WHERE id=:id');
 		$s -> bindParam(':id', $id);

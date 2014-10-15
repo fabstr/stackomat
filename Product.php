@@ -24,6 +24,14 @@ class Product {
 		return $product;
 	}
 
+	private static function isProduct($id) {
+		$s = $this -> db -> prepare('SELECT COUNT(*) AS cnt FROM products WHERE id=:id');
+		$s -> bindParam(':id', $id);
+		$res = $s -> execute() -> fetchArray();
+		return $res['cnt'] > 0;
+	}
+
+
 	public function getId() {
 		return $this -> id;
 	}
