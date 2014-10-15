@@ -57,16 +57,16 @@ echo $msg;
 	<form action="index.php?update=true" method="post">
 	<table>
 		<tr>
-			<td>Produktens streckckod</td>
-			<td><input type="text" name="id" placholder="Streckkod..."></td>
-		</tr>
-		<tr>
 			<td>Produktens namn</td>
 			<td><input name="name" type="text" placholder="Namn..."></td>
 		</tr>
 		<tr>
 			<td>Produktens kostnad</td>
 			<td><input type="text" name="cost"></td>
+		</tr>
+		<tr>
+			<td>Produktens streckckod</td>
+			<td><input type="text" name="id" placholder="Streckkod..."></td>
 		</tr>
 		<tr>
 			<td colspan="2">
