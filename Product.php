@@ -17,7 +17,8 @@ class Product {
 		$product = new self($db, $id, "", 0);
 		$s = $db -> prepare('SELECT name, cost FROM products WHERE id=:id');
 		$s -> bindParam(':id', $id);
-		$row = $s -> execute() -> fetchArray(SQLITE3_ASSOC);
+		$s -> execute();
+		$row = $s -> fetch();
 		$product -> id = $id;
 		$product -> setName($row['name']);
 		$product -> setCost($row['cost']);
@@ -27,7 +28,8 @@ class Product {
 	private static function isProduct($id) {
 		$s = $this -> db -> prepare('SELECT COUNT(*) AS cnt FROM products WHERE id=:id');
 		$s -> bindParam(':id', $id);
-		$res = $s -> execute() -> fetchArray();
+		$s -> execute();
+	        $res = $s -> fetch();
 		return $res['cnt'] > 0;
 	}
 
