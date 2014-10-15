@@ -22,7 +22,8 @@ class User {
 	private static function isUser($id) {
 		$s = $this -> db -> prepare('SELECT *, COUNT(*) AS cnt FROM users WHERE id=:id');
 		$s -> bindParam(':id', $id);
-		$res = $s -> execute() -> fetchArray();
+		$s -> execute();
+		$res = $s -> fetch();
 		return $res['cnt'] > 0;
 	}
 
@@ -30,12 +31,13 @@ class User {
 	public function getName() {
 		$s = $this -> db -> prepare('SELECT name FROM users WHERE id=:id');
 		$s -> bindParam(':id', $id);
-		$row = $s -> execute() -> fetchArray(SQLITE3_ASSOC);
+		$s -> execute();
+		$row = $s -> fetch();
 		return $row['name'];
 	}
 
 	public function pay($amount) {
-		$this -> db -> exec('BEGIN TRANSACTION;');
+		$this -> db -> beginTransaction();
 
 		$s = $this -> db -> prepare('
 			UPDATE users 
@@ -50,10 +52,10 @@ class User {
 		$p -> bindParam(':amount', $amount);
 
 		if ($s -> execute() && $p -> execute()) {
-			$this -> db -> exec('COMMIT TRANSACTION;');
+			$this -> db -> commit();
 			return true;
 		} else {
-			$this -> db -> exec('ROLLBACK TRANSACTION;');
+			$this -> db -> rollback();
 			throw new Exception('Köpet kunde inte genomföras. '
 			       . 'Saldot har inte belastats.');
 		}
@@ -75,7 +77,8 @@ class User {
 			FROM users 
 			WHERE id=:id');
 		$s -> bindParam(':id', $this -> id);
-		$result = $s -> execute() -> fetchArray();
+		$s -> execute();
+		$result = $s -> fetch();
 		return $result['balance'];
 	}
 
@@ -86,10 +89,11 @@ class User {
 			FROM lastPurchase
 			WHERE id=:id');
 		$s -> bindParam(':id', $this -> id);
-		$row = $s -> execute() -> fetchArray();
+		$s -> execute();
+	       	$row = $s -> fetch();
 		$amount = $row['amount'];
 		if ($amount) {
-			$this -> db -> exec('BEGIN TRANSACTION');
+			$this -> db -> beginTransaction();
 
 			$p = $this -> db -> prepare('
 				UPDATE users
@@ -104,10 +108,10 @@ class User {
 			$q -> bindParam(':id', $this -> id);
 
 			if ($p -> execute() && $q -> execute()) {
-				$this -> db -> exec('COMMIT TRANSACTION');
+				$this -> db -> commit();
 				return true;
 			} else {
-				$this -> db -> exec('ROLLBACK TRANSACTION');
+				$this -> db -> rollback();
 				return false;
 			}
 		}
