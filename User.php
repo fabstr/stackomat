@@ -6,13 +6,14 @@ class User {
 
 	public function __construct($db, $id) {
 		$this -> db = $db;
-		$this -> id = $id;
+		$this -> id = hash('SHA256', $id);
 	}
 
 	public static function addUser($db, $id, $name, $balance)  {
 		$s = $db -> prepare('
 			INSERT INTO users (id, name, balance) 
 			VALUES (:id, :name, :balance)');
+		$id = hash('SHA256', $id);
 		$s -> bindParam(':id', $id);
 		$s -> bindParam(':name', $name);
 		$s -> bindParam(':balance', $balance);
@@ -20,6 +21,7 @@ class User {
 	}
 
 	public static function isUser($db, $id) {
+		$id = hash('SHA256', $id);
 		$s = $db -> prepare('SELECT *, COUNT(*) AS cnt FROM users WHERE id=:id');
 		$s -> bindParam(':id', $id);
 		$s -> execute();
