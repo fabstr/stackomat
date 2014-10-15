@@ -1,8 +1,7 @@
 <?php
 require('../settings.php');
-$msg = "";
 
-function getInput() {
+function getInput($db) {
 	$id = $_POST['id'];
 	$name = $_POST['name'];
 	$cost = $_POST['cost'];
@@ -19,69 +18,80 @@ function getInput() {
 	);
 }
 
-try {
-$db = new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password);
+function handleAdd($db) {
+	$input = getInput();
+	$id = $input['id'];
+	$name = $input['name'];
+	$cost = $input['cost'];
 
-if ($db) {
-	if (isset($_GET['add'])) {
-		$input = getInput();
-		$id = $input['id'];
-		$name = $input['name'];
-		$cost = $input['cost'];
+	$s = $db -> prepare('INSERT INTO products (id, name, cost) VALUES (:id, :name, :cost);');
+	$s -> bindParam(':id', $id);
+	$s -> bindParam(':name', $name);
+	$s -> bindParam(':cost', $cost);
+	return  ($s -> execute());
+}
 
-		$s = $db -> prepare('INSERT INTO products (id, name, cost) VALUES (:id, :name, :cost);');
-		$s -> bindParam(':id', $id);
-		$s -> bindParam(':name', $name);
-		$s -> bindParam(':cost', $cost);
-		if ($s -> execute()) {
-			$added = true;
-		} else {
-			$added = false;
-		}
-	} else if (isset($_GET['update'])) {
-		$input = getInput();
-		$id = $input['id'];
-		$name = $input['name'];
-		$cost = $input['cost'];
-		$action = $input['action'];
+function handleUpdate($db) {
+	$input = getInput();
+	$id = $input['id'];
+	$name = $input['name'];
+	$cost = $input['cost'];
+	$action = $input['action'];
 
-		$result = false;
-		if ($action == 'Uppdatera') {
-			$s = $db -> prepare('UPDATE products SET name=?, cost=? WHERE id=?;');
-			$result = $s -> execute(array($name, $cost, $id));
-		} else if ($action == 'Ta bort') {
-			$s = $db -> prepare('DELETE FROM products WHERE id=?;');
-			$result = $s -> execute(array($id));
-		}
-
-		if ($result === true) {
-			$changed = true;
-		} else {
-			$changed = false;
-		}
+	$result = false;
+	if ($action == 'Uppdatera') {
+		$s = $db -> prepare('UPDATE products SET name=?, cost=? WHERE id=?;');
+		$result = $s -> execute(array($name, $cost, $id));
+	} else if ($action == 'Ta bort') {
+		$s = $db -> prepare('DELETE FROM products WHERE id=?;');
+		$result = $s -> execute(array($id));
 	}
 
-	$s = $db -> prepare('SELECT id,name,cost FROM products;');
-	$data = "";
+	return $result;
+}
+
+function listProducts() {
+	$s = $db -> prepare('SELECT id,name,cost FROM products ORDER BY name,cost;');
 	$s -> execute();
-	foreach ($s -> fetchAll() as $row) {
-		$data .= '<tr><form method="POST" action="index.php?update=true"><input type="hidden" name="id" value="'.htmlentities($row['id']).'">';
+	return $s -> fetchAll();
+}
+
+try {
+	$db = new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password);
+
+	if (isset($_GET['add'])) {
+		$added = handleAdd($db);
+	} else if (isset($_GET['update'])) {
+		$changed = handleUpdate($db);
+	}
+
+	$data = "";
+	foreach (listProducts($db) as $row) {
+		$data .= '<tr>';
+		$data .= '<form method="POST" action="index.php?update=true">';
+		$data .= '<input type="hidden" name="id" value="'.htmlentities($row['id']).'">';
 		$data .= '<td><input type="text" name="id" value="'.htmlentities($row['id']).'"></td>';
 		$data .= '<td><input type="text" name="name" value="'.htmlentities($row['name']).'"></td>';
 		$data .= '<td><input type="text" name="cost" value="'.htmlentities($row['cost']).'"></td>';
 		$data .= '<td><input type="submit" name="action" value="Uppdatera"></td>';
 		$data .= '<td><input type="submit" name="action" value="Ta bort"></td>';
-		$data .= '</form></tr>';
+		$data .= '</form>';
+		$data .= '</tr>';
 	}
-}
+
+	if (isset($added)) {
+		if ($added) $msg = 'Produkten lades till.';
+		else $msg = 'Produkten kunde inte läggas till.';
+	} else if (isset($changed)) {
+		if ($changed) $msg = 'Ändringen genomfördes.';
+		else $msg = 'Ändringen kunde inte genomföras.';
+	}
 
 } catch (PDOException $e) {
 	$msg = $e -> getMessage();
-	echo $msg;
 }
 
 ?>
-
 
 <!DOCTYPE html>
 <html>
@@ -90,13 +100,7 @@ if ($db) {
 	<meta charset='utf-8'>
 </head>
 <body>
-	<?php 
-if (isset($added)) {
-if ($added) echo 'Produkten lades till.<br/>';
-else echo "Produkten kunde inte läggas till.<br/>";
-} 
-if (isset($msg)) echo $msg;
-?>
+	<?php if (isset($msg)) echo $msg; ?>
 
 	<form action="index.php?add=true" method="post">
 	<table>
