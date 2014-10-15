@@ -1,7 +1,7 @@
 <?php
 require('../settings.php');
 
-function getInput($db) {
+function getInput() {
 	$id = $_POST['id'];
 	$name = $_POST['name'];
 	$cost = $_POST['cost'];
@@ -50,7 +50,7 @@ function handleUpdate($db) {
 	return $result;
 }
 
-function listProducts() {
+function listProducts($db) {
 	$s = $db -> prepare('SELECT id,name,cost FROM products ORDER BY name,cost;');
 	$s -> execute();
 	return $s -> fetchAll();
@@ -70,7 +70,7 @@ try {
 		$data .= '<tr>';
 		$data .= '<form method="POST" action="index.php?update=true">';
 		$data .= '<input type="hidden" name="id" value="'.htmlentities($row['id']).'">';
-		$data .= '<td><input type="text" name="id" value="'.htmlentities($row['id']).'"></td>';
+		$data .= '<td><input disabled="disabled" type="text" name="id" value="'.htmlentities($row['id']).'"></td>';
 		$data .= '<td><input type="text" name="name" value="'.htmlentities($row['name']).'"></td>';
 		$data .= '<td><input type="text" name="cost" value="'.htmlentities($row['cost']).'"></td>';
 		$data .= '<td><input type="submit" name="action" value="Uppdatera"></td>';
@@ -102,6 +102,8 @@ try {
 <body>
 	<?php if (isset($msg)) echo $msg; ?>
 
+	<p>Fyll i fälten och tryck på "Lägg till" för att lägga till en produkt i databasen.</p>
+
 	<form action="index.php?add=true" method="post">
 	<table>
 		<tr>
@@ -125,8 +127,19 @@ try {
 
 	</form>
 
+	<p>För att ändra en produkt, ändra i fälten och tryck på uppdatera.</p>
 	<?php if (!isset($data)) echo 'Kunde inte hämta data från databasen.';?>
 
-	<table><?php echo $data; ?></table>
+	<table>
+		<thead>
+			<tr>
+				<th>Streckkod</th>
+				<th>Namn</th>
+				<th>Kostnad</th>
+				<th>Åtgärder</th>
+			</tr>
+		</thead>
+		<?php echo $data; ?>
+	</table>
 </body>
 </html>
