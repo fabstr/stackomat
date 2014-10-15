@@ -9,31 +9,28 @@ require_once('settings.php');
 class Stackomat {
 	private $db;
 	private $checksumValidator;
+	private $stackomatPrinter;
 
 	public function __construct($db) {
 		$this -> db = $db;
 		$this -> checksumValidator = new ChecksumValidator();
+		$this -> stackomatPrinter = new StackomatPrinter();
 	}
 
-	private function printLine() {
-		echo "\n\n\n---------------------------------------------------"
-			."-----------------------------\n";
-	}
-
-	private function printRed($str) { 
-		echo "\033[1;31m" . $str; 
-		$this -> resetPrintColor();
-	}
-
-	private function printGreen($str) {
-		echo "\033[1;32m" . $str; 
-		$this -> resetPrintColor();
-	}
-
-	private function resetPrintColor() { 
-		echo "\033[1;0m"; 
-	}
-
+	/**
+ 	 * Read input from the user.
+	 * If exceptionForCancel is true, throw an exception if ABORT was 
+	 * entered by the user, else return zero.
+	 *
+	 * @throw Exception if (ABORT was scanned and exceptionForCancel is 
+	 *                  true) or the input could not be validated with a
+	 *                  checksum.
+	 *
+	 * @param exceptionForCancel If true, throw an exception when ABORT is
+	 *                           entered.
+	 *
+	 * @param return The input.
+	 */
 	private function readInput($exceptionForCancel=true) {
 		$input = fgets(STDIN);
 		$input = trim($input);
@@ -53,24 +50,26 @@ class Stackomat {
 		}
 	}
 
-	private function printPrompt() {
-		echo " >> ";
-	}
-
-	private function printPromptInner() {
-		echo " -> ";
-	}
-
-	// until stopWhen(collector()) return false, add the result from 
-	// collector() to the initial array
-	// return array(
-	// 		an array of collected values,
-	// 		the last value from collector
-	// )
-	// - collector is a function that gets input from the user
-	// - stopWhen is a function that returns false when the collecting 
-	//   should  stop. It takes one argument that has been returned from 
-	//   collector.
+	/**
+	 * Collect input from collector until stopWhen returns false.
+	 * until stopWhen(collector()) return false, add the result from 
+	 * collector() to the initial array
+	 * return array(
+	 * 		an array of collected values,
+	 * 		the last value from collector
+	 * )
+	 * - collector is a function that gets input from the user
+	 * - stopWhen is a function that returns false when the collecting 
+	 *   should  stop. It takes one argument that has been returned from 
+	 *   collector.
+	 * @param collector A callable that returns input from the user.
+	 * @param stopWhen A callable that given data from collector returns 
+	 *                 false when to stop collecting.
+	 * @param initial An array of initial values. 
+	 * @return An array of the initial values and the data from collector as
+	 *         the first element and the last input from collector as the 
+	 *         second element.
+	 */
 	private function collectUntil($collector, $stopWhen, $initial) {
 		$input = $collector();
 		while ($stopWhen($input)) {
@@ -80,6 +79,12 @@ class Stackomat {
 
 		return array($initial, $input);
 	}
+
+	/**
+         * Return whether str was a command to add balance.
+	 * @param str The command to check.
+	 * @return true if str is a command to add balance, else false.
+	 */
 	private function isAddBalance($str) {
 		switch ($str) {
 		case '13370028':
@@ -93,18 +98,38 @@ class Stackomat {
 		}
 	}
 
+	/**
+         * Return whether str was a command to add a user.
+	 * @param str The command to check.
+	 * @return true if str is a command to add a user, else false.
+	 */
 	private function isAddUser($str) {
 		return $str == '13370010';
 	}
 
+	/**
+         * Return whether str was a command to show balance.
+	 * @param str The command to check.
+	 * @return true if str is a command to show balance, else false.
+	 */
 	private function isShowBalance($str) {
 		return $str == '13370077';
 	}
 
+	/**
+         * Return whether str was a command to undo a purchase.
+	 * @param str The command to check.
+	 * @return true if str is a command to undo a purchase, else false.
+	 */
 	private function isUndo($str) {
 		return $str == '13370085';
 	}
 
+	/**
+         * Return whether str was a command.
+	 * @param str The string to check.
+	 * @return true if str is a command, else false.
+	 */
 	private function isCommand($str) {
 		if ($this -> isAddBalance($str)) {
 			return true;
@@ -116,6 +141,22 @@ class Stackomat {
 		return false;
 	}
 
+	/**
+ 	 * Handle the purchase of a product.
+	 * 1. Tell the user how this works.
+	 * 2. Read input until the user is no longer entering products.
+	 * 3. The last (non-product) input should be the id. Check it exists.
+	 * 4. Transform the entered product codes to an array of Product using
+	 *    map.
+	 * 5. Get the total cost of the products using reduce.
+	 * 6. Get the user's balance and check the cost can be afforded. Throw
+	 *    an exception if it cannot.
+	 * 7. Update the database, throw an exception if it cannot be done.
+	 * 8. Print a success message and the new balance.
+	 *
+	 * @param firstProduct The id of the first product (which was entered
+	 *                     before the calling of this method).
+	 */
 	private function handlePurchase($firstProduct) {
 		echo "Scanna ytterligare 0 eller fler varor. Scanna sedan ditt id för att betala.\n";
 
@@ -123,7 +164,7 @@ class Stackomat {
 		echo $p -> getName() . ': ' . $p -> getCost() . "\n";
 
 		$products = $this -> collectUntil(
-			function() {$this -> printPromptInner(); return $this -> readInput();}, 
+			function() {$this -> stackomatPrinter -> printPromptInner(); return $this -> readInput();}, 
 			function($e) {
 				$res = Product::isProduct($this -> db, $e);
 				if ($res) {
@@ -166,10 +207,16 @@ class Stackomat {
 			throw new Exception('Kunde inte utföra betalningen.');
 		}
 
-		$this -> printGreen('Du har betalat ' . $totalCost . ".\n"
+		$this -> stackomatPrinter -> printGreen('Du har betalat ' . $totalCost . ".\n"
 			. 'Nytt saldo: ' . $user->getBalance() . "\n");
 	}
 
+	/**
+ 	 * Get the sum that the balance-adding-codes represent.
+	 * @param code The code to check
+	 * @return 0 if the code was invalid, else 5, 10, 20, 50 or 100 
+	 *         (depending on the code).
+	 */
 	private function sumFromBalanceCode($code) {
 		if ($code == '13370028') {
 			return 5;
@@ -186,12 +233,26 @@ class Stackomat {
 		}
 	}
 
+	/**
+ 	 * Handle the adding of balance.
+	 * 1. Tell the user how this works.
+	 * 2. Read input until the user is no longer entering add-balance-codes.
+	 * 3. The last (non-balance-code) input should be the id. Check it 
+	 *    exists.
+	 * 5. Get the total sum of the balance-adding-codes using reduce and 
+	 *    sumFromBalanceCode.
+	 * 7. Update the database, throw an exception if it cannot be done.
+	 * 8. Print a success message and the new balance.
+	 *
+	 * @param firstBalance The first balance-adding-code (which was entered 
+	 *                     before the calling of this method).
+	 */
 	private function handleAddBalance($firstBalance) {
 		echo "Scanna 0 eller fler ladda-koder. Scanna sedan ditt id för att slutföra \nladdningen.\n";
 		echo 'Laddar ' . $this -> sumFromBalanceCode($firstBalance) . "\n";
 
 		$balances = $this -> collectUntil(
-			function() {$this -> printPromptInner(); return $this -> readInput();},
+			function() {$this -> stackomatPrinter -> printPromptInner(); return $this -> readInput();},
 			function($e) {
 				$res = $this -> isAddBalance($e);
 				if ($res) {
@@ -221,13 +282,18 @@ class Stackomat {
 			throw new Exception('Kunde inte ladda.');
 		}
 
-		$this -> printGreen('Du har laddat.'."\n"
+		$this -> stackomatPrinter -> printGreen('Du har laddat.'."\n"
 			. 'Nytt saldo: ' . $user -> getBalance() . "\n");
 	}
 
+	/**
+	 * Handle the showing of balance.
+	 * Prompt the user for the id, check it exists, get the balance and 
+	 * print it.
+	 */
 	private function handleShowBalance() {
 		echo "Scanna ditt id för att visa saldo:\n";
-		$this -> printPromptInner();
+		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
 
@@ -241,22 +307,29 @@ class Stackomat {
 		echo 'Saldo: ' . $balance . "\n";
 	}
 
+	/**
+ 	 * Handle the adding of a user.
+	 * 1. Prompt the user for an id.
+	 * 2. Check the id is not a command, an existing user or a product.
+	 * 3. Add the user to the database.
+	 * 4. Print a success message.
+	 */
 	private function handleAddUser() {
 		echo "Scanna ditt id för att lägga till dig som användare:\n";
-		$this -> printPromptInner();
+		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
 
 		if ($this -> isCommand($id)) {
-			$this -> printRed("id:t är ett kommando, kommandon får "
+			$this -> stackomatPrinter -> printRed("id:t är ett kommando, kommandon får "
 				."inte läggas till som användare.\n");
 
 		} else if (User::isUser($this -> db, $id)) {
-			$this -> printRed("Du kunde inte läggas till i "
+			$this -> stackomatPrinter -> printRed("Du kunde inte läggas till i "
 				."databasen: id:t finns redan.\n");
 
 		} else if (Product::isProduct($this -> db, $id)) {
-			$this -> printRed("id:t finns redan som produkt, "
+			$this -> stackomatPrinter -> printRed("id:t finns redan som produkt, "
 				."produkter får inte läggas till som "
 				."användare.\n");
 
@@ -266,13 +339,19 @@ class Stackomat {
 					.'i databasen.');
 			}
 
-			$this -> printGreen('Du lades till.');
+			$this -> stackomatPrinter -> printGreen('Du lades till.');
 		}
 	}
 
+	/**
+  	 * Handle undo of a purchase.
+	 * First get the id and check it exists, then call undo on the User 
+	 * object. If the undo was successfull, print a success message, else
+	 * throw an exception.
+	 */
 	private function handleUndo() {
 		echo "Scanna ditt id för att ångra det senaste köpet:\n";
-		$this -> printPromptInner();
+		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
 		if (!User::isUser($this -> db, $id)) {
@@ -281,17 +360,24 @@ class Stackomat {
 
 		$user = new User($this -> db, $id);
 		if ($user -> undoLatest()) {
-			$this -> printGreen("Köpet ångrades. Nytt saldo: " 
+			$this -> stackomatPrinter -> printGreen("Köpet ångrades. Nytt saldo: " 
 				. $user -> getBalance() . "\n");
 		} else {
-			$this -> printRed("Kunde inte ångra köp. Saldo: " 
-				. $user -> getBalance() . "\n");
+			throw new Exception('Kunde inte ånga köp. Saldo: ' 
+				. $user -> getBalance());
 		}
 	}
 
+	/**
+  	 * Do a round.
+	 * 1. Print the prompt and read input.
+	 * 2. Check if it is a product/add balance/show balance/undo/add user.
+	 * 3. If so, call the correct handle-function.
+	 * 4. Else, throw an exception.
+	 */
 	private function doRound() {
-		$this -> printLine();
-		$this -> printPrompt();
+		$this -> stackomatPrinter -> printLine();
+		$this -> stackomatPrinter -> printPrompt();
 		$action = $this -> readInput(false);
 		if ($action == 0) return;
 
@@ -310,28 +396,34 @@ class Stackomat {
 		}
 	}
 
+	/**
+ 	 * Run an eternal loop of doRound's.
+	 * Before starting the loop, turn off echoing in the terminal, reset
+	 * this upon exiting the loop (ie never).
+	 */
 	public function run() {
 		exec('/bin/stty -g', $stty);
 		exec('/bin/stty -echo');
-		//pcntl_signal(SIGINT, function ($signal) {
-			//exec('/bin/stty -g ' . $stty[0]);
-			//echo "bye!\n";
-			//exit(0);
-		//});
+
 		for (;;) {
 			try {
 				$this -> doRound();
 			} catch (Exception $e) {
-				$this -> printRed($e -> getMessage());
+				$this -> stackomatPrinter -> printRed($e -> getMessage());
 			}
 		}
+
 		exec('/bin/stty -g ' . $stty[0]);
 	}
 }
 
 for (;;) {
+	// try to create a stackomat instance, if not successfull print the error 
+	// message and exit.
 	try {
-		$stackomat = new Stackomat(new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password));;
+		$pdo = new PDO('mysql:host=localhost;dbname=stackomat', 
+			'stackomat', $password);
+		$stackomat = new Stackomat($pdo);
 	} catch (PDOException $e) {
 		echo 'Kunde inte starta stackomaten: ';
 		echo $e -> getMessage();
@@ -339,6 +431,8 @@ for (;;) {
 		exit(1);
 	}
 
+	// run the stackomat, if we get any pdo exception, catch it and restart
+	// the stackomat the next round in the for-loop.
 	try {
 		$stackomat -> run();
 	} catch (PDOException $e) {
