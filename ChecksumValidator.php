@@ -6,7 +6,9 @@ class ChecksumValidator {
 			return true;
 		} else if ($this -> validateEAN($string)) {
 			return true;
-		} 
+		} else if ($this -> validateEAN8($string)) {
+			return true;
+		}
 
 		return false;
 	}
@@ -49,6 +51,7 @@ class ChecksumValidator {
 	}
 
 	private function computeEAN($string) {
+
 		$arr = str_split($string);
 		$i = 1;
 		$sum = 0;
@@ -64,12 +67,39 @@ class ChecksumValidator {
 		return ($higher - $sum) % 10;
 	}
 
+	private function computeEAN8($string) {
+
+		$arr = str_split($string);
+		$i = 1;
+		$sum = 0;
+		foreach ($arr as $num) {
+			$mult = 3;
+			if ($i % 2 == 0) $mult = 1;
+			$sum += $num * $mult;
+			$i++;
+		}
+
+		$ental = $sum % 10;
+		$higher = $sum - $ental + 10;
+		return ($higher - $sum) % 10;
+	}
+
+
 	public function validateEAN($string) {
-		if ($this -> is_number($string)) return false;
+		if (!$this -> is_number($string)) return false;
 
 		$numberToComputeFor = substr($string, 0, strlen($string)-1);
 		$correctChecksum = substr($string, -1);
 		$checksum = $this -> computeEAN($numberToComputeFor);
+		return $correctChecksum == $checksum;
+	}
+
+	public function validateEAN8($string) {
+		if (!$this -> is_number($string)) return false;
+
+		$numberToComputeFor = substr($string, 0, strlen($string)-1);
+		$correctChecksum = substr($string, -1);
+		$checksum = $this -> computeEAN8($numberToComputeFor);
 		return $correctChecksum == $checksum;
 	}
 
@@ -104,5 +134,4 @@ class ChecksumValidator {
 		echo "Done!\n";
 	}
 }
-
 ?>
