@@ -125,7 +125,7 @@ class Stackomat {
 		$products = $this -> collectUntil(
 			function() {$this -> printPromptInner(); return $this -> readInput();}, 
 			function($e) {
-				$res = Product::isProduct($e);
+				$res = Product::isProduct($this -> db, $e);
 				if ($res) {
 					$p = Product::fromId($this -> db, $e);
 					echo $p -> getName() . ': ' . $p -> getCost() . "\n";
@@ -139,7 +139,7 @@ class Stackomat {
 		$products = $products[0];
 
 		echo 'Läste id: ' . $id . "\n";
-		if (!User::isUser($id)) {
+		if (!User::isUser($this -> db, $id)) {
 			throw new Exception('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
@@ -207,7 +207,7 @@ class Stackomat {
 		$balances = $balances[0];
 
 		echo 'Läste id: ' . $id . "\n";
-		if (!User::isUser($id)) {
+		if (!User::isUser($this -> db, $id)) {
 			throw new Exception('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
@@ -231,7 +231,7 @@ class Stackomat {
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
 
-		if (!User::isUser($id)) {
+		if (!User::isUser($this -> db, $id)) {
 			throw new Exception('Ditt id kunde inte hittas i ' 
 				.'databasen.');
 		}
@@ -251,11 +251,11 @@ class Stackomat {
 			$this -> printRed("id:t är ett kommando, kommandon får "
 				."inte läggas till som användare.\n");
 
-		} else if (User::isUser($id)) {
+		} else if (User::isUser($this -> db, $id)) {
 			$this -> printRed("Du kunde inte läggas till i "
 				."databasen: id:t finns redan.\n");
 
-		} else if (Product::isProduct($id)) {
+		} else if (Product::isProduct($this -> db, $id)) {
 			$this -> printRed("id:t finns redan som produkt, "
 				."produkter får inte läggas till som "
 				."användare.\n");
@@ -275,7 +275,7 @@ class Stackomat {
 		$this -> printPromptInner();
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
-		if (!User::isUser($id)) {
+		if (!User::isUser($this -> db, $id)) {
 			throw new Exception("Id:t finns inte i databasen.");
 		}
 
@@ -295,7 +295,7 @@ class Stackomat {
 		$action = $this -> readInput(false);
 		if ($action == 0) return;
 
-		if (Product::isProduct($action)) {
+		if (Product::isProduct($this -> db, $action)) {
 			$this -> handlePurchase($action);
 		} else if ($this -> isAddBalance($action)) {
 			$this -> handleAddBalance($action);
@@ -329,8 +329,22 @@ class Stackomat {
 	}
 }
 
-//error_reporting(E_ERROR);
-$stackomat = new Stackomat(new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password));;
-$stackomat -> run();
+for (;;) {
+	try {
+		$stackomat = new Stackomat(new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password));;
+	} catch (PDOException $e) {
+		echo 'Kunde inte starta stackomaten: ';
+		echo $e -> getMessage();
+		echo "\n";
+		exit(1);
+	}
+
+	try {
+		$stackomat -> run();
+	} catch (PDOException $e) {
+		echo 'Fick pdo-exception: ' . $e -> getMessage() . "\n";
+		echo 'Startar om stackomaten...' . "\n";
+	}
+}
 
 ?>

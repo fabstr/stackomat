@@ -19,8 +19,8 @@ class User {
 		return $s -> execute();
 	}
 
-	private static function isUser($id) {
-		$s = $this -> db -> prepare('SELECT *, COUNT(*) AS cnt FROM users WHERE id=:id');
+	public static function isUser($db, $id) {
+		$s = $db -> prepare('SELECT *, COUNT(*) AS cnt FROM users WHERE id=:id');
 		$s -> bindParam(':id', $id);
 		$s -> execute();
 		$res = $s -> fetch();
@@ -46,10 +46,11 @@ class User {
 		$s -> bindParam(':amount', $amount);
 		$s -> bindParam(':id', $this -> id);
 
-		$p = $this -> db -> prepare('INSERT OR REPLACE INTO '
-			.'lastPurchase  (id, amount) VALUES (:id, :amount)');
-		$p -> bindParam(':id', $this -> id);
-		$p -> bindParam(':amount', $amount);
+		$p = $this -> db -> prepare('INSERT INTO lastPurchase (id, amount) VALUES (:id1, :amount1) ON DUPLICATE KEY UPDATE id=:id2, amount=:amount2');
+		$p -> bindParam(':id1', $this -> id);
+		$p -> bindParam(':amount1', $amount);
+		$p -> bindParam(':id2', $this -> id);
+		$p -> bindParam(':amount2', $amount);
 
 		if ($s -> execute() && $p -> execute()) {
 			$this -> db -> commit();
