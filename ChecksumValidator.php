@@ -1,10 +1,17 @@
 <?php
 
 class ChecksumValidator {
+	/**
+ 	 * Validate the string of integers.
+	 * The string is valid if it can be validated with a correct checksum
+	 * according to the Luhn algorithm, EAN13 or EAN8.
+	 * @param string The string (of integers) to validate.
+	 * @return true if the string is valid, else false.
+	 */
 	public function validate($string) {
 		if ($this -> validateLuhn($string)) {
 			return true;
-		} else if ($this -> validateEAN($string)) {
+		} else if ($this -> validateEAN13($string)) {
 			return true;
 		} else if ($this -> validateEAN8($string)) {
 			return true;
@@ -13,11 +20,21 @@ class ChecksumValidator {
 		return false;
 	}
 
+	/**
+ 	 * Check if a string is a number.
+	 * @param string The string to check.
+	 * @return true if the string is a number, else false.
+	 */
 	private function is_number($string) {
 		if (preg_match('/^[0-9]+$/', $string)) return true;
 		return false;
 	}
 
+	/**
+ 	 * Compute the Luhn checksum for the number in string.
+	 * @param string A string representing a single non-negative integer.
+	 * @return The Luhn checksum.
+	 */
 	private function computeLuhn($string) {
 		$arr = str_split($string);
 		$i = 2;
@@ -39,18 +56,12 @@ class ChecksumValidator {
 		return ($hogreTiotal - $sum) % 10;
 	}
 
-	public function validateLuhn($string) {
-		if (!$this -> is_number($string)) return false;
-
-		$numberToComputeFor = substr($string, 0, strlen($string)-1);
-		$correctChecksum = substr($string, -1);
-
-		$checksum = $this -> computeLuhn($numberToComputeFor);
-
-		return $checksum == $correctChecksum;
-	}
-
-	private function computeEAN($string) {
+	/**
+ 	 * Compute the EAN13 checksum for the number in string.
+	 * @param string A string representing a single non-negative integer.
+	 * @return The EAN13 checksum.
+	 */
+	private function computeEAN13($string) {
 
 		$arr = str_split($string);
 		$i = 1;
@@ -62,11 +73,16 @@ class ChecksumValidator {
 			$i++;
 		}
 
-		$ental = $sum % 10;
+		$ental = $sum % 0;
 		$higher = $sum - $ental + 10;
 		return ($higher - $sum) % 10;
 	}
 
+	/**
+ 	 * Compute the EAN8 checksum for the number in string.
+	 * @param string A string representing a single non-negative integer.
+	 * @return The EAN8 checksum.
+	 */
 	private function computeEAN8($string) {
 
 		$arr = str_split($string);
@@ -84,16 +100,41 @@ class ChecksumValidator {
 		return ($higher - $sum) % 10;
 	}
 
-
-	public function validateEAN($string) {
+	/**
+	 * Check whether string can be validated with a Luhn checksum.
+	 * @param string The string to validate.
+	 * @return true if the checksum is correct, else false.
+	 */
+	public function validateLuhn($string) {
 		if (!$this -> is_number($string)) return false;
 
 		$numberToComputeFor = substr($string, 0, strlen($string)-1);
 		$correctChecksum = substr($string, -1);
-		$checksum = $this -> computeEAN($numberToComputeFor);
+
+		$checksum = $this -> computeLuhn($numberToComputeFor);
+
+		return $checksum == $correctChecksum;
+	}
+
+	/**
+	 * Check whether string can be validated with a EAN13 checksum.
+	 * @param string The string to validate.
+	 * @return true if the checksum is correct, else false.
+	 */
+	public function validateEAN13($string) {
+		if (!$this -> is_number($string)) return false;
+
+		$numberToComputeFor = substr($string, 0, strlen($string)-1);
+		$correctChecksum = substr($string, -1);
+		$checksum = $this -> computeEAN13($numberToComputeFor);
 		return $correctChecksum == $checksum;
 	}
 
+	/**
+	 * Check whether string can be validated with a EAN8 checksum.
+	 * @param string The string to validate.
+	 * @return true if the checksum is correct, else false.
+	 */
 	public function validateEAN8($string) {
 		if (!$this -> is_number($string)) return false;
 
@@ -103,12 +144,24 @@ class ChecksumValidator {
 		return $correctChecksum == $checksum;
 	}
 
+	/**
+ 	 * Compute the Luhn checksum for string and return the concatenation of
+	 * string and the checksum.
+	 * @param string The string to compute the checksum for.
+	 * @return The concatenation of the string and its checksum.
+	 */
 	public function makeLuhn($string) {
 		return $string . $this -> computeLuhn($string);
 	}
 
-	public function makeEAN($string) {
-		return $string . $this -> computeEAN($string);
+	/**
+ 	 * Compute the EAN13 checksum for string and return the concatenation of
+	 * string and the checksum.
+	 * @param string The string to compute the checksum for.
+	 * @return The concatenation of the string and its checksum.
+	 */
+	public function makeEAN13($string) {
+		return $string . $this -> computeEAN13($string);
 	}
 
 
@@ -129,7 +182,7 @@ class ChecksumValidator {
 			assert ($sum == $this -> computeLuhn($number), 'luhn: ' . $number);
 		}
 		foreach ($ean as $number => $sum) {
-			assert ($sum == $this -> computeEAN($number), 'ean: ' . $number);
+			assert ($sum == $this -> computeEAN13($number), 'ean: ' . $number);
 		}
 		echo "Done!\n";
 	}
