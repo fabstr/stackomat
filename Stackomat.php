@@ -4,6 +4,7 @@
 require_once('User.php');
 require_once('Product.php');
 require_once('ChecksumValidator.php');
+require_once('settings.php');
 
 class Stackomat {
 	private $db;
@@ -329,7 +330,7 @@ class Stackomat {
 }
 
 //error_reporting(E_ERROR);
-$stackomat = new Stackomat(new SQLite3('databas.sqlite'));
+$stackomat = new Stackomat(new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password));;
 $stackomat -> run();
 
 ?>
