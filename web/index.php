@@ -1,5 +1,5 @@
 <?php
-require('settings.php');
+require('../settings.php');
 
 try {
 $db = new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password);
