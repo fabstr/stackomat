@@ -1,14 +1,34 @@
 <?php
 require('../settings.php');
+$msg = "";
+
+function getInput() {
+	$id = $_POST['id'];
+	$name = $_POST['name'];
+	$cost = $_POST['cost'];
+	if (isset($_POST['action'])) $action = $_POST['action'];
+	if (!preg_match('/^[0-9]+$/', $id)) die();
+	if (!is_string($name)) die();
+	if (!preg_match('/^[0-9]+$/', $cost)) die();
+	if (!(!isset($action) || $action == 'Uppdatera' || $action == 'Ta bort')) die();
+	return array(
+		'id' => $id, 
+		'name' => $name, 
+		'cost' => $cost,
+		'action' => $action
+	);
+}
 
 try {
 $db = new PDO('mysql:host=localhost;dbname=stackomat', 'stackomat', $password);
 
 if ($db) {
-	if (isset($_GET['update'])) {
-		$id = $_POST['id'];
-		$name = $_POST['name'];
-		$cost = $_POST['cost'];
+	if (isset($_GET['add'])) {
+		$input = getInput();
+		$id = $input['id'];
+		$name = $input['name'];
+		$cost = $input['cost'];
+
 		$s = $db -> prepare('INSERT INTO products (id, name, cost) VALUES (:id, :name, :cost);');
 		$s -> bindParam(':id', $id);
 		$s -> bindParam(':name', $name);
@@ -17,7 +37,27 @@ if ($db) {
 			$added = true;
 		} else {
 			$added = false;
-			$msg = $db -> lastErrorMsg();
+		}
+	} else if (isset($_GET['update'])) {
+		$input = getInput();
+		$id = $input['id'];
+		$name = $input['name'];
+		$cost = $input['cost'];
+		$action = $input['action'];
+
+		$result = false;
+		if ($action == 'Uppdatera') {
+			$s = $db -> prepare('UPDATE products SET name=?, cost=? WHERE id=?;');
+			$result = $s -> execute(array($name, $cost, $id));
+		} else if ($action == 'Ta bort') {
+			$s = $db -> prepare('DELETE FROM products WHERE id=?;');
+			$result = $s -> execute(array($id));
+		}
+
+		if ($result === true) {
+			$changed = true;
+		} else {
+			$changed = false;
 		}
 	}
 
@@ -25,15 +65,19 @@ if ($db) {
 	$data = "";
 	$s -> execute();
 	foreach ($s -> fetchAll() as $row) {
-		$data .= '<tr>';
-		$data .= '<td> <input type="text" name="id" value="'.$row['id'].'"></td>';
-		$data .= '<td> <input type="text" name="name" value="'.$row['name'].'"></td>';
-		$data .= '<td> <input type="text" name="cost" value="'.$row['cost'].'"></td>';
-		$data .= '</tr>';
+		$data .= '<tr><form method="POST" action="index.php?update=true"><input type="hidden" name="id" value="'.htmlentities($row['id']).'">';
+		$data .= '<td><input type="text" name="id" value="'.htmlentities($row['id']).'"></td>';
+		$data .= '<td><input type="text" name="name" value="'.htmlentities($row['name']).'"></td>';
+		$data .= '<td><input type="text" name="cost" value="'.htmlentities($row['cost']).'"></td>';
+		$data .= '<td><input type="submit" name="action" value="Uppdatera"></td>';
+		$data .= '<td><input type="submit" name="action" value="Ta bort"></td>';
+		$data .= '</form></tr>';
 	}
 }
+
 } catch (PDOException $e) {
 	$msg = $e -> getMessage();
+	echo $msg;
 }
 
 ?>
@@ -51,10 +95,10 @@ if (isset($added)) {
 if ($added) echo 'Produkten lades till.<br/>';
 else echo "Produkten kunde inte läggas till.<br/>";
 } 
-echo $msg;
+if (isset($msg)) echo $msg;
 ?>
 
-	<form action="index.php?update=true" method="post">
+	<form action="index.php?add=true" method="post">
 	<table>
 		<tr>
 			<td>Produktens namn</td>
