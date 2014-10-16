@@ -1,4 +1,5 @@
 <?php
+require_once('Exceptions.php');
 
 class User {
 	// the pdo handle
@@ -97,7 +98,7 @@ class User {
 			return true;
 		} else {
 			$this -> db -> rollback();
-			throw new Exception('Köpet kunde inte genomföras. '
+			throw new DatabaseException('Köpet kunde inte genomföras. '
 			       . 'Saldot har inte belastats.');
 		}
 	}
@@ -181,7 +182,7 @@ class User {
 			}
 		}
 
-		throw new Exception('Det finns inget köp att ångra. Köp går '
+		throw new NoUndoException('Det finns inget köp att ångra. Köp går '
 			.'endast att ångra en gång.');
 	}
 }

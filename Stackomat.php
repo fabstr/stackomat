@@ -5,6 +5,7 @@ require_once('User.php');
 require_once('Product.php');
 require_once('ChecksumValidator.php');
 require_once('settings.php');
+require_once('Exceptions.php');
 
 class Stackomat {
 	private $db;
@@ -36,7 +37,7 @@ class Stackomat {
 		$input = trim($input);
 		if ($input == 0) {
 			if ($exceptionForCancel == true) {
-				throw new Exception('Avbryter');
+				throw new AbortException('Avbryter');
 			}
 
 			return $input;
@@ -44,7 +45,7 @@ class Stackomat {
 			return $input;
 		} else {
 
-		throw new Exception('Kunde inte scanna: '
+		throw new InvalidChecksumException('Kunde inte scanna: '
 			.'Kontrollsumman gick inte att validera eller var '
 			.'felaktig.');
 		}
@@ -181,7 +182,7 @@ class Stackomat {
 
 		echo 'Läste id: ' . $id . "\n";
 		if (!User::isUser($this -> db, $id)) {
-			throw new Exception('Ditt id kunde inte hittas i '
+			throw new UserNotFoundException('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
 
@@ -199,12 +200,12 @@ class Stackomat {
 		$user = new User($this -> db, $id);
 		if ($user -> getBalance() < $totalCost) {
 			$balance = $user -> getBalance();
-			throw new Exception('Du har inte råd. Saldo: ' 
+			throw new CannotAffordException('Du har inte råd. Saldo: ' 
 				. $balance . ', kostnad: ' . $totalCost);
 		} 
 
 		if (!$user -> pay($totalCost)) {
-			throw new Exception('Kunde inte utföra betalningen.');
+			throw new DatabaseException('Kunde inte utföra betalningen.');
 		}
 
 		$this -> stackomatPrinter -> printGreen('Du har betalat ' . $totalCost . ".\n"
@@ -269,7 +270,7 @@ class Stackomat {
 
 		echo 'Läste id: ' . $id . "\n";
 		if (!User::isUser($this -> db, $id)) {
-			throw new Exception('Ditt id kunde inte hittas i '
+			throw new UserNotFoundException('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
 		$sumToAdd = array_reduce(
@@ -279,7 +280,7 @@ class Stackomat {
 
 		$user = new User($this -> db, $id);
 		if (!$user -> addBalance($sumToAdd)) {
-			throw new Exception('Kunde inte ladda.');
+			throw new DatabaseException('Kunde inte ladda.');
 		}
 
 		$this -> stackomatPrinter -> printGreen('Du har laddat.'."\n"
@@ -298,7 +299,7 @@ class Stackomat {
 		echo 'Läste id: ' . $id . "\n";
 
 		if (!User::isUser($this -> db, $id)) {
-			throw new Exception('Ditt id kunde inte hittas i ' 
+			throw new UserNotFoundException('Ditt id kunde inte hittas i ' 
 				.'databasen.');
 		}
 
@@ -335,7 +336,7 @@ class Stackomat {
 
 		} else {
 			if (!User::addUser($this -> db, $id, '', 0)) {
-				throw new Exception('Kunde inte lägga till dig '
+				throw new DatabaseException('Kunde inte lägga till dig '
 					.'i databasen.');
 			}
 
@@ -355,7 +356,7 @@ class Stackomat {
 		$id = $this -> readInput();
 		echo 'Läste id: ' . $id . "\n";
 		if (!User::isUser($this -> db, $id)) {
-			throw new Exception("Id:t finns inte i databasen.");
+			throw new UserNotFoundException("Id:t finns inte i databasen.");
 		}
 
 		$user = new User($this -> db, $id);
@@ -363,7 +364,7 @@ class Stackomat {
 			$this -> stackomatPrinter -> printGreen("Köpet ångrades. Nytt saldo: " 
 				. $user -> getBalance() . "\n");
 		} else {
-			throw new Exception('Kunde inte ånga köp. Saldo: ' 
+			throw new DatabaseException('Kunde inte ånga köp. Saldo: ' 
 				. $user -> getBalance());
 		}
 	}
@@ -392,7 +393,7 @@ class Stackomat {
 		} else if ($this -> isAddUser($action)) {
 			$this -> handleAddUser();
 		} else {
-			throw new Exception('Okänt kommando.');
+			throw new UnknownCommandException('Okänt kommando.');
 		}
 	}
 
@@ -408,7 +409,19 @@ class Stackomat {
 		for (;;) {
 			try {
 				$this -> doRound();
-			} catch (Exception $e) {
+			} catch (AbortException $e) {
+				$this -> stackomatPrinter -> printRed($e -> getMessage());
+			} catch (InvalidChecksumException $e) {
+				$this -> stackomatPrinter -> printRed($e -> getMessage());
+			} catch (UserNotFoundException $e) {
+				$this -> stackomatPrinter -> printRed($e -> getMessage());
+			} catch (CannotAffordException $e) {
+				$this -> stackomatPrinter -> printRed($e -> getMessage());
+			} catch (DatabaseException $e) {
+				$this -> stackomatPrinter -> printRed($e -> getMessage());
+			} catch (NoUndoException $e) {
+				$this -> stackomatPrinter -> printRed($e -> getMessage());
+			} catch (UnknownCommandException $e) {
 				$this -> stackomatPrinter -> printRed($e -> getMessage());
 			}
 		}
