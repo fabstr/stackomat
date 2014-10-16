@@ -416,7 +416,7 @@ class Stackomat {
 		} else if ($this -> isAddUser($action)) {
 			$this -> handleAddUser();
 		} else {
-			if (User::isUser($action)) {
+			if (User::isUser($this -> db, $action)) {
 				$this -> printBalance($action);
 			} else {
 				throw new UnknownCommandException('Okänt kommando.');
