@@ -341,7 +341,7 @@ class Stackomat {
 		echo "Scanna ditt id för att lägga till dig som användare:\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
-		$this -> stackomatPrinter -> printId($id);
+		$this -> stackomatPrinter -> printId($id, false);
 
 		if ($this -> isCommand($id)) {
 			$this -> stackomatPrinter -> printRed("id:t är ett kommando, kommandon får "
@@ -360,6 +360,8 @@ class Stackomat {
 			echo 'Scanna ditt id igen för att bekräfta.' . "\n";
 			$this -> stackomatPrinter -> printPromptInner();
 			$second = $this -> readInput();
+			$this -> stackomatPrinter -> printPromptInner($second);
+
 			if ($second != $id) {
 				throw new InvalidChecksumException(
 					'Id:t matchade inte den andra '

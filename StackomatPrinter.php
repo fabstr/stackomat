@@ -48,12 +48,20 @@ class StackomatPrinter {
 		echo " -> ";
 	}
 
-	public function printId($id) {
+	/**
+ 	 * Print the id of a user.
+	 * If printStars is true, print *'s instead of the real id.
+	 * @param id The id to print
+	 * @param printStars whether to print *'s instead of the real id.
+	 */
+	public function printId($id, $printStars=true) {
 		$str = 'Läste id: '; 
-		for ($i=0; $i<strlen($id); $i++) {
-			$str .= "*";
+		if ($printStars == false) {
+			echo $id . "\n";
+		} else {
+			for ($i=0; $i<strlen($id); $i++) $str .= "*";
+			echo $str . "\n";
 		}
-		echo $str . "\n";
 	}
 }
 
