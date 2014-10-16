@@ -47,6 +47,14 @@ class StackomatPrinter {
 	public function printPromptInner() {
 		echo " -> ";
 	}
+
+	public function printId($id) {
+		$str = 'Läste id: '; 
+		for ($i=0; $i<strlen($id); $i++) {
+			$str .= "*";
+		}
+		echo $str . "\n";
+	}
 }
 
 ?>
