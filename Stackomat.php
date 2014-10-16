@@ -6,6 +6,7 @@ require_once('Product.php');
 require_once('ChecksumValidator.php');
 require_once('settings.php');
 require_once('Exceptions.php');
+require_once('StackomatPrinter.php');
 
 class Stackomat {
 	private $db;
