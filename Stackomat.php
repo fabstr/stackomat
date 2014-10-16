@@ -360,7 +360,7 @@ class Stackomat {
 			echo 'Scanna ditt id igen för att bekräfta.' . "\n";
 			$this -> stackomatPrinter -> printPromptInner();
 			$second = $this -> readInput();
-			$this -> stackomatPrinter -> printPromptInner($second);
+			$this -> stackomatPrinter -> printId($second);
 
 			if ($second != $id) {
 				throw new InvalidChecksumException(
