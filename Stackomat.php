@@ -182,7 +182,8 @@ class Stackomat {
 		$id = $products[1];
 		$products = $products[0];
 
-		echo 'Läste id: ' . $id . "\n";
+		$this -> stackomatPrinter -> printId($id);
+
 		if (!User::isUser($this -> db, $id)) {
 			throw new UserNotFoundException('Ditt id kunde inte hittas i '
 				.'databasen.');
@@ -271,7 +272,8 @@ class Stackomat {
 		$id = $balances[1];
 		$balances = $balances[0];
 
-		echo 'Läste id: ' . $id . "\n";
+		$this -> stackomatPrinter -> printId($id);
+
 		if (!User::isUser($this -> db, $id)) {
 			throw new UserNotFoundException('Ditt id kunde inte hittas i '
 				.'databasen.');
@@ -299,7 +301,7 @@ class Stackomat {
 		echo "Scanna ditt id för att visa saldo:\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
-		echo 'Läste id: ' . $id . "\n";
+		$this -> stackomatPrinter -> printId($id);
 
 		if (!User::isUser($this -> db, $id)) {
 			throw new UserNotFoundException('Ditt id kunde inte hittas i ' 
@@ -322,7 +324,7 @@ class Stackomat {
 		echo "Scanna ditt id för att lägga till dig som användare:\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
-		echo 'Läste id: ' . $id . "\n";
+		$this -> stackomatPrinter -> printId($id);
 
 		if ($this -> isCommand($id)) {
 			$this -> stackomatPrinter -> printRed("id:t är ett kommando, kommandon får "
@@ -357,7 +359,7 @@ class Stackomat {
 		echo "Scanna ditt id för att ångra det senaste köpet:\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
-		echo 'Läste id: ' . $id . "\n";
+		$this -> stackomatPrinter -> printId($id);
 		if (!User::isUser($this -> db, $id)) {
 			throw new UserNotFoundException("Id:t finns inte i databasen.");
 		}
