@@ -30,26 +30,35 @@ class Stackomat {
 	 *
 	 * @param exceptionForCancel If true, throw an exception when ABORT is
 	 *                           entered.
+	 * @param exceptionForInvalidChecksum If true, throw an exception when 
+	 *                                    an invalid checksum is read.
 	 *
 	 * @param return The input.
 	 */
-	private function readInput($exceptionForCancel=true) {
+	private function readInput($exceptionForCancel=true, $exceptionForInvalidChecksum=false) {
 		$input = fgets(STDIN);
 		$input = trim($input);
 		if ($input == 0) {
+			// abort
 			if ($exceptionForCancel == true) {
 				throw new AbortException('Avbryter');
 			}
 
 			return $input;
 		} else if ($this -> checksumValidator -> validate($input)) {
+			// correct checksum
 			return $input;
 		} else {
-
-		throw new InvalidChecksumException('Kunde inte scanna: '
-			.'Kontrollsumman gick inte att validera eller var '
-			.'felaktig.');
+			// invalid checksum
+			if ($exceptionForInvalidChecksum == true) {
+				throw new InvalidChecksumException('Kunde inte '
+					.'scanna: Kontrollsumman gick inte att '
+					.'validera eller var felaktig.');
+			} else {
+				return $input;
+			}
 		}
+
 	}
 
 	/**
