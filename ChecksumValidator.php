@@ -73,7 +73,7 @@ class ChecksumValidator {
 			$i++;
 		}
 
-		$ental = $sum % 0;
+		$ental = $sum % 10;
 		$higher = $sum - $ental + 10;
 		return ($higher - $sum) % 10;
 	}
