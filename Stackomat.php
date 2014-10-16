@@ -317,6 +317,14 @@ class Stackomat {
 				.'databasen.');
 		}
 
+		$this -> printBalance($id);
+	}
+
+	/**
+ 	 * Print the balance of the user with the given id.
+	 * @param id The user id.
+	 */
+	private function printBalance($id) {
 		$user = new User($this -> db, $id);
 		$balance = $user -> getBalance();
 		echo 'Saldo: ' . $balance . "\n";
@@ -388,6 +396,7 @@ class Stackomat {
 	 * 1. Print the prompt and read input.
 	 * 2. Check if it is a product/add balance/show balance/undo/add user.
 	 * 3. If so, call the correct handle-function.
+	 * 4. Else, if the action was an id, print the balance.
 	 * 4. Else, throw an exception.
 	 */
 	private function doRound() {
@@ -407,7 +416,11 @@ class Stackomat {
 		} else if ($this -> isAddUser($action)) {
 			$this -> handleAddUser();
 		} else {
-			throw new UnknownCommandException('Okänt kommando.');
+			if (User::isUser($action)) {
+				$this -> printBalance($action);
+			} else {
+				throw new UnknownCommandException('Okänt kommando.');
+			}
 		}
 	}
 
