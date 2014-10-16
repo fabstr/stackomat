@@ -162,6 +162,7 @@ class Stackomat {
 		echo "Scanna ytterligare 0 eller fler varor. Scanna sedan ditt id för att betala.\n";
 
 		$p = Product::fromId($this -> db, $firstProduct);
+		$this -> stackomatPrinter -> printPromptInner();
 		echo $p -> getName() . ': ' . $p -> getCost() . "\n";
 
 		$products = $this -> collectUntil(
@@ -250,6 +251,7 @@ class Stackomat {
 	 */
 	private function handleAddBalance($firstBalance) {
 		echo "Scanna 0 eller fler ladda-koder. Scanna sedan ditt id för att slutföra \nladdningen.\n";
+		$this -> stackomatPrinter -> printPromptInner();
 		echo 'Laddar ' . $this -> sumFromBalanceCode($firstBalance) . "\n";
 
 		$balances = $this -> collectUntil(
