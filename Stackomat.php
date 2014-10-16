@@ -357,6 +357,15 @@ class Stackomat {
 				."användare.\n");
 
 		} else {
+			echo 'Scanna ditt id igen för att bekräfta.' . "\n";
+			$second = $this -> readInput();
+			if ($second != $id) {
+				throw new InvalidChecksumException(
+					'Id:t matchade inte den andra '
+					.'scanningen. Var vänlig försök igen.' 
+					."\n");
+			}
+
 			if (!User::addUser($this -> db, $id, '', 0)) {
 				throw new DatabaseException('Kunde inte lägga till dig '
 					.'i databasen.');
