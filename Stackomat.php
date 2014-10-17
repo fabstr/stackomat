@@ -103,7 +103,7 @@ class Stackomat {
 		case '13370044':
 		case '13370051':
 		case '13370069':
-		case '13370085':
+		case '13370093':
 			return true;
 		default:
 			return false;
@@ -232,7 +232,7 @@ class Stackomat {
 	 *         (depending on the code).
 	 */
 	private function sumFromBalanceCode($code) {
-		if ($code == '13370085') {
+		if ($code == '13370093') {
 			return 1;
 		} else if ($code == '13370028') {
 			return 5;
