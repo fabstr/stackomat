@@ -1,6 +1,8 @@
 #!/usr/bin/php
 <?php
 
+ini_set('error_log', '/var/log/stackomat.log');
+
 require_once('User.php');
 require_once('Product.php');
 require_once('ChecksumValidator.php');
@@ -17,6 +19,7 @@ class Stackomat {
 		$this -> db = $db;
 		$this -> checksumValidator = new ChecksumValidator();
 		$this -> stackomatPrinter = new StackomatPrinter();
+		error_log('Startar stackomat');
 	}
 
 	/**
