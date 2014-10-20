@@ -1,14 +1,13 @@
 #!/usr/bin/php
 <?php
 
-ini_set('error_log', '/var/log/stackomat.log');
-
 require_once('User.php');
 require_once('Product.php');
 require_once('ChecksumValidator.php');
 require_once('settings.php');
 require_once('Exceptions.php');
 require_once('StackomatPrinter.php');
+require_once('log.php');
 
 class Stackomat {
 	private $db;
@@ -19,7 +18,7 @@ class Stackomat {
 		$this -> db = $db;
 		$this -> checksumValidator = new ChecksumValidator();
 		$this -> stackomatPrinter = new StackomatPrinter();
-		error_log('Startar stackomat');
+		l('Startar stackomat');
 	}
 
 	/**
@@ -39,30 +38,36 @@ class Stackomat {
 	 * @param return The input.
 	 */
 	private function readInput($exceptionForCancel=true, $exceptionForInvalidChecksum=true) {
+		l('reading input');
 		$input = fgets(STDIN);
 		$input = trim($input);
 		if ($input == 0) {
 			// abort
 			if ($exceptionForCancel == true) {
+				l('reading input: abort');
 				throw new AbortException('Avbryter');
 			}
 
 			return $input;
 		} else if ($this -> checksumValidator -> validate($input)) {
 			// correct checksum
+			l('reading input: correct checksum, returning');
 			return $input;
 		} else {
 			// is it a user?
 			if (User::isUser($this -> db, $input)) {
+				l('reading input: user, returning');
 				return $input;
 			}
 
 			// invalid checksum
 			if ($exceptionForInvalidChecksum == true) {
+				l('reding input: throwing exception for invalid checksum');
 				throw new InvalidChecksumException('Kunde inte '
 					.'scanna: Kontrollsumman gick inte att '
 					.'validera eller var felaktig.');
 			} else {
+				l('reading input: invalid checksum, returning');
 				return $input;
 			}
 		}
@@ -90,11 +95,13 @@ class Stackomat {
 	 *         second element.
 	 */
 	private function collectUntil($collector, $stopWhen, $initial) {
+		l('collect-until');
 		$input = $collector();
 		while ($stopWhen($input)) {
 			array_push($initial, $input);
 			$input = $collector();
 		}
+		l('collect-until: returning');
 
 		return array($initial, $input);
 	}
@@ -105,6 +112,7 @@ class Stackomat {
 	 * @return true if str is a command to add balance, else false.
 	 */
 	private function isAddBalance($str) {
+		l('isAddBalance? ' . $str);
 		switch ($str) {
 		case '13370028':
 		case '13370036':
@@ -112,8 +120,10 @@ class Stackomat {
 		case '13370051':
 		case '13370069':
 		case '13370093':
+			l('isAddBalance? yes');
 			return true;
 		default:
+			l('isAddBalance? no');
 			return false;
 		}
 	}
@@ -124,6 +134,7 @@ class Stackomat {
 	 * @return true if str is a command to add a user, else false.
 	 */
 	private function isAddUser($str) {
+		l('isAddUser? ' . $str);
 		return $str == '13370010';
 	}
 
@@ -133,6 +144,7 @@ class Stackomat {
 	 * @return true if str is a command to show balance, else false.
 	 */
 	private function isShowBalance($str) {
+		l('isShowUser? ' . $str);
 		return $str == '13370077';
 	}
 
@@ -142,6 +154,7 @@ class Stackomat {
 	 * @return true if str is a command to undo a purchase, else false.
 	 */
 	private function isUndo($str) {
+		l('isUndo ' . $str);
 		return $str == '13370085';
 	}
 
@@ -151,11 +164,15 @@ class Stackomat {
 	 * @return true if str is a command, else false.
 	 */
 	private function isCommand($str) {
+		l('isCommand');
 		if ($this -> isAddBalance($str)) {
+			l('isCommand add balance');
 			return true;
 		} else if ($this -> isShowBalance($str)) {
+			l('isCommand show balance');
 			return true;
-		} else if ($this -> isAddBalance($str)) {
+		} else if ($this -> isAddUser($str)) {
+			l('isCommand add user');
 			return true;
 		}
 		return false;
@@ -178,6 +195,7 @@ class Stackomat {
 	 *                     before the calling of this method).
 	 */
 	private function handlePurchase($firstProduct) {
+		l('handle purchase');
 		echo "Scanna ytterligare 0 eller fler varor. Scanna sedan ditt id för att betala.\n";
 
 		$p = Product::fromId($this -> db, $firstProduct);
@@ -196,6 +214,7 @@ class Stackomat {
 			},
 			array($firstProduct)
 		);
+		l('handle purchase: products collected');
 
 		$id = $products[1];
 		$products = $products[0];
@@ -203,6 +222,7 @@ class Stackomat {
 		$this -> stackomatPrinter -> printId($id);
 
 		if (!User::isUser($this -> db, $id)) {
+			l('handle purchase: invalid id');
 			throw new UserNotFoundException('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
@@ -218,17 +238,21 @@ class Stackomat {
 			0
 		);
 
+		l('handle purchase: trying to buy');
 		$user = new User($this -> db, $id);
 		if ($user -> getBalance() < $totalCost) {
+			l('handle purhcase: cannot afford');
 			$balance = $user -> getBalance();
 			throw new CannotAffordException('Du har inte råd. Saldo: ' 
 				. $balance . ', kostnad: ' . $totalCost);
 		} 
 
 		if (!$user -> pay($totalCost)) {
+			l('handle purchase: couldnt pay');
 			throw new DatabaseException('Kunde inte utföra betalningen.');
 		}
 
+		l('handle purchase: paid');
 		$this -> stackomatPrinter -> printGreen('Du har betalat ' . $totalCost . ".\n"
 			. 'Nytt saldo: ' . $user->getBalance() . "\n");
 	}
@@ -240,6 +264,7 @@ class Stackomat {
 	 *         (depending on the code).
 	 */
 	private function sumFromBalanceCode($code) {
+		l('sumFromBalanceCode ' . $code);
 		if ($code == '13370093') {
 			return 1;
 		} else if ($code == '13370028') {
@@ -272,6 +297,8 @@ class Stackomat {
 	 *                     before the calling of this method).
 	 */
 	private function handleAddBalance($firstBalance) {
+		l('handleAddBalance');
+
 		echo "Scanna 0 eller fler ladda-koder. Scanna sedan ditt id för att slutföra \nladdningen.\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		echo 'Laddar ' . $this -> sumFromBalanceCode($firstBalance) . "\n";
@@ -289,12 +316,15 @@ class Stackomat {
 			array($firstBalance)
 		);
 
+		l('handleAddBalance done collecting');
+
 		$id = $balances[1];
 		$balances = $balances[0];
 
 		$this -> stackomatPrinter -> printId($id);
 
 		if (!User::isUser($this -> db, $id)) {
+			l('handleAddBalance invalid id');
 			throw new UserNotFoundException('Ditt id kunde inte hittas i '
 				.'databasen.');
 		}
@@ -303,11 +333,14 @@ class Stackomat {
 			function($sum, $e) {$sum += $this -> sumFromBalanceCode($e); return $sum;}
 		);
 
+		l('handleAddBalance trying to add');
 		$user = new User($this -> db, $id);
 		if (!$user -> addBalance($sumToAdd)) {
+			l('handleAddBalance couldnt add');
 			throw new DatabaseException('Kunde inte ladda.');
 		}
 
+		l('handleAddBalance done');
 		$this -> stackomatPrinter -> printGreen('Du har laddat.'."\n"
 			. 'Nytt saldo: ' . $user -> getBalance() . "\n");
 	}
@@ -318,16 +351,19 @@ class Stackomat {
 	 * print it.
 	 */
 	private function handleShowBalance() {
+		l('showing balance');
 		echo "Scanna ditt id för att visa saldo:\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
 		$this -> stackomatPrinter -> printId($id);
 
 		if (!User::isUser($this -> db, $id)) {
+			l('showing balance invalid id');
 			throw new UserNotFoundException('Ditt id kunde inte hittas i ' 
 				.'databasen.');
 		}
 
+		l('showing balance done');
 		$this -> printBalance($id);
 	}
 
@@ -336,6 +372,7 @@ class Stackomat {
 	 * @param id The user id.
 	 */
 	private function printBalance($id) {
+		l('printing balance');
 		$user = new User($this -> db, $id);
 		$balance = $user -> getBalance();
 		echo 'Saldo: ' . $balance . "\n";
@@ -349,31 +386,38 @@ class Stackomat {
 	 * 4. Print a success message.
 	 */
 	private function handleAddUser() {
+		l('adding user');
+
 		echo "Scanna ditt id för att lägga till dig som användare:\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
 		$this -> stackomatPrinter -> printId($id, false);
 
 		if ($this -> isCommand($id)) {
+			l('adding user was command');
 			$this -> stackomatPrinter -> printRed("id:t är ett kommando, kommandon får "
 				."inte läggas till som användare.\n");
 
 		} else if (User::isUser($this -> db, $id)) {
+			l('adding user was user');
 			$this -> stackomatPrinter -> printRed("Du kunde inte läggas till i "
 				."databasen: id:t finns redan.\n");
 
 		} else if (Product::isProduct($this -> db, $id)) {
+			l('adding user was product');
 			$this -> stackomatPrinter -> printRed("id:t finns redan som produkt, "
 				."produkter får inte läggas till som "
 				."användare.\n");
 
 		} else {
+			l('adding user not invalid id');
 			echo 'Scanna ditt id igen för att bekräfta.' . "\n";
 			$this -> stackomatPrinter -> printPromptInner();
 			$second = $this -> readInput(true, false);
 			$this -> stackomatPrinter -> printId($second);
 
 			if ($second != $id) {
+				l('adding user second id didnt match');
 				throw new InvalidChecksumException(
 					'Id:t matchade inte den andra '
 					.'scanningen. Var vänlig försök igen.' 
@@ -381,10 +425,12 @@ class Stackomat {
 			}
 
 			if (!User::addUser($this -> db, $id, '', 0)) {
+				l('adding user couldnt add');
 				throw new DatabaseException('Kunde inte lägga till dig '
 					.'i databasen.');
 			}
 
+			l('adding user done');
 			$this -> stackomatPrinter -> printGreen('Du lades till.');
 		}
 	}
@@ -396,19 +442,23 @@ class Stackomat {
 	 * throw an exception.
 	 */
 	private function handleUndo() {
+		l('undo');
 		echo "Scanna ditt id för att ångra det senaste köpet:\n";
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
 		$this -> stackomatPrinter -> printId($id);
 		if (!User::isUser($this -> db, $id)) {
+			l('undo: invalid id');
 			throw new UserNotFoundException("Id:t finns inte i databasen.");
 		}
 
 		$user = new User($this -> db, $id);
 		if ($user -> undoLatest()) {
+			l('undo: done');
 			$this -> stackomatPrinter -> printGreen("Köpet ångrades. Nytt saldo: " 
 				. $user -> getBalance() . "\n");
 		} else {
+			l('undo: couldnt undo');
 			throw new DatabaseException('Kunde inte ånga köp. Saldo: ' 
 				. $user -> getBalance());
 		}
@@ -427,6 +477,7 @@ class Stackomat {
 		$this -> stackomatPrinter -> printPrompt();
 		$action = $this -> readInput(false);
 		if ($action == 0) return;
+		l('doround got input');
 
 		if (Product::isProduct($this -> db, $action)) {
 			$this -> handlePurchase($action);
@@ -442,6 +493,7 @@ class Stackomat {
 			if (User::isUser($this -> db, $action)) {
 				$this -> printBalance($action);
 			} else {
+				l('doround: invalid command ' . $action);
 				throw new UnknownCommandException('Okänt kommando.');
 			}
 		}
@@ -484,10 +536,13 @@ for (;;) {
 	// try to create a stackomat instance, if not successfull print the error 
 	// message and exit.
 	try {
+		l('starting stackomat');
 		$pdo = new PDO('mysql:host=localhost;dbname=stackomat', 
 			'stackomat', $password);
 		$stackomat = new Stackomat($pdo);
+		l('stackomat started');
 	} catch (PDOException $e) {
+		l('couldnt start');
 		echo 'Kunde inte starta stackomaten: ';
 		echo $e -> getMessage();
 		echo "\n";
@@ -497,10 +552,13 @@ for (;;) {
 	// run the stackomat, if we get any pdo exception, catch it and restart
 	// the stackomat the next round in the for-loop.
 	try {
+		l('running stackomat');
 		$stackomat -> run();
 	} catch (PDOException $e) {
 		echo 'Fick pdo-exception: ' . $e -> getMessage() . "\n";
 		echo 'Startar om stackomaten...' . "\n";
+		l('running pdoexception: ' . $e -> getMessage());
+		l('running restarting');
 	}
 }
 
