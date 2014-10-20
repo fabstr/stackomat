@@ -35,7 +35,7 @@ class Stackomat {
 	 *
 	 * @param return The input.
 	 */
-	private function readInput($exceptionForCancel=true, $exceptionForInvalidChecksum=false) {
+	private function readInput($exceptionForCancel=true, $exceptionForInvalidChecksum=true) {
 		$input = fgets(STDIN);
 		$input = trim($input);
 		if ($input == 0) {
@@ -49,6 +49,11 @@ class Stackomat {
 			// correct checksum
 			return $input;
 		} else {
+			// is it a user?
+			if (User::isUser($this -> db, $input)) {
+				return $input;
+			}
+
 			// invalid checksum
 			if ($exceptionForInvalidChecksum == true) {
 				throw new InvalidChecksumException('Kunde inte '
@@ -362,7 +367,7 @@ class Stackomat {
 		} else {
 			echo 'Scanna ditt id igen för att bekräfta.' . "\n";
 			$this -> stackomatPrinter -> printPromptInner();
-			$second = $this -> readInput();
+			$second = $this -> readInput(true, false);
 			$this -> stackomatPrinter -> printId($second);
 
 			if ($second != $id) {
