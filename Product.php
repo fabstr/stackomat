@@ -1,5 +1,7 @@
 <?php
 
+require_once('log.php');
+
 class Product {
 	// the pdo handle
 	private $db;
@@ -27,6 +29,7 @@ class Product {
 	 * @return The product.
 	 */
 	public static function fromId($db, $id) {
+		l('getting user from id');
 		$product = new self($db, $id, "", 0);
 		$s = $db -> prepare('SELECT name, cost FROM products WHERE id=:id');
 		$s -> bindParam(':id', $id);
@@ -43,11 +46,15 @@ class Product {
 	 * @return True if such a product exists, else false.
 	 */
 	public static function isProduct($db, $id) {
+		l('is product? ' . $id);
 		$s = $db -> prepare('SELECT COUNT(*) AS cnt FROM products WHERE id=:id');
 		$s -> bindParam(':id', $id);
 		$s -> execute();
 	        $res = $s -> fetch();
-		return $res['cnt'] > 0;
+		$result = $res['cnt'] > 0;
+		if ($result) l('is product? yes');
+		else l('is product? no');
+		return $result;
 	}
 
 	/**
