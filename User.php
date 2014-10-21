@@ -1,5 +1,6 @@
 <?php
 require_once('Exceptions.php');
+require_once('log.php');
 
 class User {
 	// the pdo handle
@@ -23,6 +24,7 @@ class User {
 	 * @return true if the user was added successfully, else false.
 	 */
 	public static function addUser($db, $id, $name, $balance)  {
+		l('add user');
 		$s = $db -> prepare('
 			INSERT INTO users (id, name, balance) 
 			VALUES (:id, :name, :balance)');
@@ -41,12 +43,16 @@ class User {
 	 * @return true if the user exists, else false.
 	 */
 	public static function isUser($db, $id) {
+		l('isUser? ' . $id);
 		$id = hash('SHA256', $id);
 		$s = $db -> prepare('SELECT *, COUNT(*) AS cnt FROM users WHERE id=:id');
 		$s -> bindParam(':id', $id);
 		$s -> execute();
 		$res = $s -> fetch();
-		return $res['cnt'] > 0;
+		$result = $res['cnt'] > 0;
+		if ($result) l('isUser? yes');
+		else l('isUser? no');
+		return $result;
 	}
 
 	/**
