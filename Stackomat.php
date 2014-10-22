@@ -10,12 +10,19 @@ require_once('StackomatPrinter.php');
 require_once('log.php');
 
 class Stackomat {
+	private $dbusername;
+	private $dbpassword;
+	private $pdostring;
+
 	private $db;
 	private $checksumValidator;
 	private $stackomatPrinter;
 
-	public function __construct($db) {
-		$this -> db = $db;
+	public function __construct($pdostring, $username, $password) {
+		$this -> pdostring = $pdostring;
+		$this -> dbusername = $username;
+		$this -> dbpassword = $password;
+		$this -> db = null;
 		$this -> checksumValidator = new ChecksumValidator();
 		$this -> stackomatPrinter = new StackomatPrinter();
 		l('Startar stackomat');
@@ -41,6 +48,14 @@ class Stackomat {
 		l('reading input');
 		$input = fgets(STDIN);
 		$input = trim($input);
+
+		l('readInput: got input');
+		if ($this -> db === null) {
+			l('db is null, reconnecting');
+			$this -> connectDb();
+		}
+
+		l('readInput: checking input');
 		if ($input == 0) {
 			// abort
 			if ($exceptionForCancel == true) {
@@ -72,6 +87,17 @@ class Stackomat {
 			}
 		}
 
+	}
+
+	/**
+ 	 * Connect to the database.
+	 * Set pdo to throw exceptions.
+	 */
+	private function connectDb() {
+		l('connectDb: connecting to db');
+		$this -> db = new PDO($this -> pdostring, $this -> dbusername, 
+			$this -> dbpassword);
+		$this -> db -> setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	}
 
 	/**
@@ -466,11 +492,13 @@ class Stackomat {
 
 	/**
   	 * Do a round.
-	 * 1. Print the prompt and read input.
+	 * 1. Print the prompt and read input (readinput reconnects to the db if
+	 *    needed).
 	 * 2. Check if it is a product/add balance/show balance/undo/add user.
 	 * 3. If so, call the correct handle-function.
 	 * 4. Else, if the action was an id, print the balance.
-	 * 4. Else, throw an exception.
+	 * 5. Else, throw an exception.
+	 * 6. Close the db.
 	 */
 	private function doRound() {
 		$this -> stackomatPrinter -> printLine();
@@ -497,6 +525,9 @@ class Stackomat {
 				throw new UnknownCommandException('Okänt kommando.');
 			}
 		}
+
+		// we're done with the db for now, disconnect by setting to null
+		$this -> db = null;
 	}
 
 	/**
@@ -537,9 +568,8 @@ for (;;) {
 	// message and exit.
 	try {
 		l('starting stackomat');
-		$pdo = new PDO('mysql:host=localhost;dbname=stackomat', 
-			'stackomat', $password);
-		$stackomat = new Stackomat($pdo);
+		$pdostring = 'mysql:host=localhost;dbname=stackomat';
+		$stackomat = new Stackomat($pdostring, 'stackomat', $password);
 		l('stackomat started');
 	} catch (PDOException $e) {
 		l('couldnt start');
