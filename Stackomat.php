@@ -555,11 +555,11 @@ class Stackomat {
 				$this -> stackomatPrinter -> printRed($e -> getMessage());
 			} catch (UnknownCommandException $e) {
 				$this -> stackomatPrinter -> printRed($e -> getMessage());
-			} finally {
-				// we're done with the db for now, disconnect 
-				// by setting to null
-				$this -> db = null;
 			}
+
+			// we're done with the db for now, disconnect 
+			// by setting to null
+			$this -> db = null;
 		}
 
 		exec('/bin/stty -g ' . $stty[0]);
