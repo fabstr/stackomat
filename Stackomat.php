@@ -18,6 +18,9 @@ class Stackomat {
 	private $checksumValidator;
 	private $stackomatPrinter;
 
+	private $socket;
+	private $stdin;
+
 	public function __construct($pdostring, $username, $password) {
 		$this -> pdostring = $pdostring;
 		$this -> dbusername = $username;
@@ -25,7 +28,14 @@ class Stackomat {
 		$this -> db = null;
 		$this -> checksumValidator = new ChecksumValidator();
 		$this -> stackomatPrinter = new StackomatPrinter();
+
+		$this -> stdin = fopen('php://stdin', 'r');
+
 		l('Startar stackomat');
+	}
+
+	public function __destruct() {
+		fclose($this -> stdin);
 	}
 
 	/**
@@ -46,7 +56,8 @@ class Stackomat {
 	 */
 	private function readInput($exceptionForCancel=true, $exceptionForInvalidChecksum=true) {
 		l('reading input');
-		$input = fgets(STDIN);
+
+		$input = fgets($this -> stdin);
 		$input = trim($input);
 
 		l('readInput: got input');
