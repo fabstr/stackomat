@@ -62,7 +62,8 @@ class Stackomat {
 
 			if ($nchanged > 0) {
 				foreach ($read as $fd) {
-					return fgets($fd);
+					$line = fgets($fd);
+					return $line;
 				}
 			}
 		}
@@ -457,7 +458,7 @@ class Stackomat {
 
 		echo "Scanna ditt id för att lägga till dig som användare:\n";
 		$this -> stackomatPrinter -> printPromptInner();
-		$id = $this -> readInput();
+		$id = $this -> readInput(true, false);
 		$this -> stackomatPrinter -> printId($id, false);
 
 		if ($this -> isCommand($id)) {
