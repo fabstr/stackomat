@@ -30,12 +30,42 @@ class Stackomat {
 		$this -> stackomatPrinter = new StackomatPrinter();
 
 		$this -> stdin = fopen('php://stdin', 'r');
+		$this -> socket = stream_socket_server("udp://127.0.0.1:12345", 
+			$errno, $errstr, STREAM_SERVER_BIND);
+		if ($this -> socket === false) {
+			throw new Exception('Kunde inte öppna socket.');
+		}
 
 		l('Startar stackomat');
 	}
 
 	public function __destruct() {
 		fclose($this -> stdin);
+		fclose($this -> socket);
+	}
+
+	/**
+ 	 * Wait for input on stdin and socket, return a single line of input.
+	 * Check for input every 5 ms.
+	 * @return A line of input.
+	 */
+	private function getInput() {
+		while (true) {
+			$read = array($this -> stdin, $this -> socket);
+			$write = NULL;
+			$except = NULL;
+
+			$nchanged = stream_select($read, $write, $except, 0, 5000);
+			if ($nchanged === false) {
+				throw new Exception('Fel från stream_select');
+			}
+
+			if ($nchanged > 0) {
+				foreach ($read as $fd) {
+					return fgets($fd);
+				}
+			}
+		}
 	}
 
 	/**
@@ -57,7 +87,7 @@ class Stackomat {
 	private function readInput($exceptionForCancel=true, $exceptionForInvalidChecksum=true) {
 		l('reading input');
 
-		$input = fgets($this -> stdin);
+		$input = trim($this -> getInput());
 		$input = trim($input);
 
 		l('readInput: got input');
