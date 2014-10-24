@@ -498,7 +498,6 @@ class Stackomat {
 	 * 3. If so, call the correct handle-function.
 	 * 4. Else, if the action was an id, print the balance.
 	 * 5. Else, throw an exception.
-	 * 6. Close the db.
 	 */
 	private function doRound() {
 		$this -> stackomatPrinter -> printLine();
@@ -525,15 +524,15 @@ class Stackomat {
 				throw new UnknownCommandException('Okänt kommando.');
 			}
 		}
-
-		// we're done with the db for now, disconnect by setting to null
-		$this -> db = null;
 	}
 
 	/**
  	 * Run an eternal loop of doRound's.
+	 * The db handle is closed every loop (and reopened by readInput when
+	 * needed ie has read data).
+	 *
 	 * Before starting the loop, turn off echoing in the terminal, reset
-	 * this upon exiting the loop (ie never).
+	 * this upon exiting the loop (ie never). 
 	 */
 	public function run() {
 		exec('/bin/stty -g', $stty);
@@ -556,6 +555,10 @@ class Stackomat {
 				$this -> stackomatPrinter -> printRed($e -> getMessage());
 			} catch (UnknownCommandException $e) {
 				$this -> stackomatPrinter -> printRed($e -> getMessage());
+			} finally {
+				// we're done with the db for now, disconnect 
+				// by setting to null
+				$this -> db = null;
 			}
 		}
 
