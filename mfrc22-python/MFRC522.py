@@ -178,6 +178,8 @@ class MFRC522:
       i = i - 1
       if ~((i!=0) and ~(n&0x01) and ~(n&waitIRq)):
         break
+      else:
+	time.sleep(0.01)
     
     self.ClearBitMask(self.BitFramingReg, 0x80)
   
