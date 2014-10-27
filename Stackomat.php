@@ -547,30 +547,41 @@ class Stackomat {
 	private function doRound() {
 		$this -> stackomatPrinter -> printLine();
 		$this -> stackomatPrinter -> printPrompt();
-		$action = $this -> readInput(false);
-		if ($action == 0) return;
-		l('doround got input');
 
-		if (Product::isProduct($this -> db, $action)) {
-			$this -> handlePurchase($action);
-		} else if ($this -> isAddBalance($action)) {
-			$this -> handleAddBalance($action);
-		} else if ($this -> isShowBalance($action)) {
-			$this -> handleShowBalance();
-		} else if ($this -> isUndo($action)) {
-			$this -> handleUndo();
-		} else if ($this -> isAddUser($action)) {
-			$this -> handleAddUser();
-		} else {
-			if (User::isUser($this -> db, $action)) {
-				$currtime = time();
-				if ($currtime - $this -> lastTimeForId > 1) {
-					$this -> lastTimeForId = $currtime;
-					$this -> printBalance($action);
-				}
+		$reading = true;
+			while ($reading === true) {
+			$action = $this -> readInput(false);
+			if ($action == 0) return;
+			l('doround got input');
+
+			if (Product::isProduct($this -> db, $action)) {
+				$this -> handlePurchase($action);
+				$reading = false;
+			} else if ($this -> isAddBalance($action)) {
+				$this -> handleAddBalance($action);
+				$reading = false;
+			} else if ($this -> isShowBalance($action)) {
+				$this -> handleShowBalance();
+				$reading = false;
+			} else if ($this -> isUndo($action)) {
+				$this -> handleUndo();
+				$reading = false;
+			} else if ($this -> isAddUser($action)) {
+				$this -> handleAddUser();
+				$reading = false;
 			} else {
-				l('doround: invalid command ' . $action);
-				throw new UnknownCommandException('Okänt kommando.');
+				if (User::isUser($this -> db, $action)) {
+					$currtime = time();
+					if ($currtime - $this -> lastTimeForId > 1) {
+						$this -> lastTimeForId = $currtime;
+						$this -> printBalance($action);
+						$reading = false;
+					}
+				} else {
+					l('doround: invalid command ' . $action);
+					$reading = false;
+					throw new UnknownCommandException('Okänt kommando.');
+				}
 			}
 		}
 	}
