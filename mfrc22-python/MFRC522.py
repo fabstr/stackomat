@@ -36,6 +36,7 @@ class MFRC522:
   MI_OK       = 0
   MI_NOTAGERR = 1
   MI_ERR      = 2
+  MI_COLLISION = 3
   
   Reserved00     = 0x00
   CommandReg     = 0x01
@@ -395,3 +396,7 @@ class MFRC522:
     self.Write_MFRC522(self.TxAutoReg, 0x40)
     self.Write_MFRC522(self.ModeReg, 0x3D)
     self.AntennaOn()
+
+  def NewCardPresent(self):
+    result = self.MFRC522_Reset(self, self.PICC_REQIDL)
+    return (result == self.MI_OK or result == MI_COLLISION)
