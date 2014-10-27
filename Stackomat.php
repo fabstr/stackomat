@@ -17,6 +17,7 @@ class Stackomat {
 	private $db;
 	private $checksumValidator;
 	private $stackomatPrinter;
+	private $lastTimeForId;
 
 	private $socket;
 	private $stdin;
@@ -28,6 +29,8 @@ class Stackomat {
 		$this -> db = null;
 		$this -> checksumValidator = new ChecksumValidator();
 		$this -> stackomatPrinter = new StackomatPrinter();
+
+		$this -> lastTimeForId = 0;
 
 		$this -> stdin = fopen('php://stdin', 'r');
 		$this -> socket = stream_socket_server("udp://127.0.0.1:12345", 
@@ -560,7 +563,11 @@ class Stackomat {
 			$this -> handleAddUser();
 		} else {
 			if (User::isUser($this -> db, $action)) {
-				$this -> printBalance($action);
+				$currtime = time();
+				if ($currtime - $this -> lastTimeForId > 1) {
+					$this -> lastTimeForId = $currtime;
+					$this -> printBalance($action);
+				}
 			} else {
 				l('doround: invalid command ' . $action);
 				throw new UnknownCommandException('Okänt kommando.');
