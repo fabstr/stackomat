@@ -30,19 +30,22 @@ while continue_reading:
     # Scan for cards    
     (status,TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
-    # Get the UID of the card
-    (status,uid) = MIFAREReader.MFRC522_Anticoll()
+    # check if there is a new card present
+    if MIFAREReader.NewCardPresent():
 
-    # If we have the UID, continue
-    if status == MIFAREReader.MI_OK:
+        # Get the UID of the card
+        (status,uid) = MIFAREReader.MFRC522_Anticoll()
 
-	idint = 0
-	idint += uid[3]*pow(2,24)
-	idint += uid[2]*pow(2,16)
-	idint += uid[1]*pow(2,8)
-	idint += uid[0]
-	print idint
+        # If we have the UID, continue
+        if status == MIFAREReader.MI_OK:
 
-        # id = [uid[0], uid[1], uid[2], uid[3]];
-	idstr = str(idint) + "\n"
-        sock.sendto(idstr, ("127.0.0.1", 12345))
+	    idint = 0
+	    idint += uid[3]*pow(2,24)
+	    idint += uid[2]*pow(2,16)
+	    idint += uid[1]*pow(2,8)
+	    idint += uid[0]
+	    print idint
+
+            # id = [uid[0], uid[1], uid[2], uid[3]];
+	    idstr = str(idint) + "\n"
+            sock.sendto(idstr, ("127.0.0.1", 12345))
