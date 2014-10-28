@@ -76,6 +76,8 @@ class Stackomat {
  	 * Read input from the user.
 	 * If exceptionForCancel is true, throw an exception if ABORT was 
 	 * entered by the user, else return zero.
+	 * 
+	 * If the input is '13370101', wait for the next input.
 	 *
 	 * @throw Exception if (ABORT was scanned and exceptionForCancel is 
 	 *                  true) or the input could not be validated with a
@@ -93,6 +95,8 @@ class Stackomat {
 
 		$input = trim($this -> getInput());
 		$input = trim($input);
+
+		if ($input == '13370101') return readInput($exceptionForCancel, $exceptionForInvalidChecksum);
 
 		l('readInput: got input');
 		if ($this -> db === null) {
