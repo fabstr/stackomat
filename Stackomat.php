@@ -96,7 +96,7 @@ class Stackomat {
 		$input = trim($this -> getInput());
 		$input = trim($input);
 
-		if ($input == '13370101') return readInput($exceptionForCancel, $exceptionForInvalidChecksum);
+		if ($input == '13370101') return $this -> readInput($exceptionForCancel, $exceptionForInvalidChecksum);
 
 		l('readInput: got input');
 		if ($this -> db === null) {
