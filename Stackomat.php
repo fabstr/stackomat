@@ -331,7 +331,14 @@ class Stackomat {
 		$this -> stackomatPrinter -> printGreen('Du har betalat ' . $totalCost . ".\n"
 			. 'Nytt saldo: ' . $user->getBalance() . "\n");
 
-		$this -> push('Köp: ' . $user -> getBalance());
+		$prdStr= '';
+		$prdFirst = true;
+		foreach($products as $p) {
+			if (!$prdFirst) $prdStr .= ', ';
+			$prdStr .= $p -> getName();
+			$prdFirst = false;
+		}
+		$this -> push('Purchased SEK: ' . $totalCost . ' ('.$prdStr.')');
 	}
 
 	/**
@@ -420,6 +427,7 @@ class Stackomat {
 		l('handleAddBalance done');
 		$this -> stackomatPrinter -> printGreen('Du har laddat.'."\n"
 			. 'Nytt saldo: ' . $user -> getBalance() . "\n");
+		$this -> push('Added '.$sumToAdd.' SEK to account');
 	}
 
 	/**
@@ -509,6 +517,7 @@ class Stackomat {
 
 			l('adding user done');
 			$this -> stackomatPrinter -> printGreen('Du lades till.');
+			$this -> push('Added new user: '.$id);
 		}
 	}
 
@@ -534,6 +543,7 @@ class Stackomat {
 			l('undo: done');
 			$this -> stackomatPrinter -> printGreen("Köpet ångrades. Nytt saldo: " 
 				. $user -> getBalance() . "\n");
+			$this -> push('Undid previous purchase');
 		} else {
 			l('undo: couldnt undo');
 			throw new DatabaseException('Kunde inte ånga köp. Saldo: ' 
@@ -635,7 +645,8 @@ class Stackomat {
 		global $pushkey;
 		$title = 'Stackomat';
 		$mac = sha1($title . $msg . $pushkey);
-		@file_get_contents('https://apple.tallr.se/push.php?title='.rawurlencode($title).'&msg='.rawurlencode($msg).'&key'.$mac);
+		file_get_contents('https://apple.tallr.se/push.php?title='.rawurlencode($title).'&msg='.rawurlencode($msg).'&key='.$mac);
+		file_get_contents('https://stormhub.org/push/stacken.php?title='.rawurlencode($title).'&msg='.rawurlencode($msg).'&key='.$mac);
 	}
 }
 
@@ -659,6 +670,7 @@ for (;;) {
 	// the stackomat the next round in the for-loop.
 	try {
 		l('running stackomat');
+		$stackomat -> push('Startar');
 		$stackomat -> run();
 	} catch (PDOException $e) {
 		echo 'Fick pdo-exception: ' . $e -> getMessage() . "\n";
