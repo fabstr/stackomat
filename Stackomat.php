@@ -330,6 +330,8 @@ class Stackomat {
 		l('handle purchase: paid');
 		$this -> stackomatPrinter -> printGreen('Du har betalat ' . $totalCost . ".\n"
 			. 'Nytt saldo: ' . $user->getBalance() . "\n");
+
+		$this -> push('Köp: ' . $user -> getBalance());
 	}
 
 	/**
@@ -627,6 +629,13 @@ class Stackomat {
 		}
 
 		exec('/bin/stty -g ' . $stty[0]);
+	}
+
+	public function push($msg) {
+		global $pushkey;
+		$title = 'Stackomat';
+		$mac = sha1($title . $msg . $pushkey);
+		@file_get_contents('https://apple.tallr.se/push.php?title='.rawurlencode($title).'&msg='.rawurlencode($msg).'&key'.$mac);
 	}
 }
 
