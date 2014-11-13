@@ -326,6 +326,16 @@ class Stackomat {
 			0
 		);
 
+		$calories = array_reduce(
+			$products,
+			function($sum, $e) {
+				$product = Product::fromId($this -> db, $e);
+				$sum += $product -> getCalories();
+				return $sum;
+			}, 
+			0
+		);
+
 		l('handle purchase: trying to buy');
 		$user = new User($this -> db, $id);
 		if ($user -> getBalance() < $totalCost) {
@@ -343,6 +353,8 @@ class Stackomat {
 		l('handle purchase: paid');
 		$this -> stackomatPrinter -> printGreen('Du har betalat ' . $totalCost . ".\n"
 			. 'Nytt saldo: ' . $user->getBalance() . "\n");
+
+		$user -> addCalories($calories);
 
 		$prdStr= '';
 		$prdFirst = true;
