@@ -229,6 +229,52 @@ class User {
 		$s -> bindParam(':id', $this -> id);
 		return $s -> execute();
 	}
+
+	/**
+ 	 * Return true if the user counts calories.
+	 * @return true if the user counts calories.
+	 */
+	public function countsCalories() {
+		$s = $this -> db -> prepare('
+			SELECT countCalories
+			FROM users
+			WHERE id=:id');
+		$s -> bindParam(':id', $this -> id);
+		$s -> execute();
+		$row = $s -> fetch();
+		if ($row['countCalories'] === true) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+ 	 * Toggle the user's calorie counting.
+	 * If the user is not counting, make the user count calories.
+	 * If the user is counting, set the calories to zero and disable 
+	 * counting.
+	 * @return true if the change was succesfull.
+	 */
+	public function toggleCalories() {
+		if ($this -> countsCalories()) {
+			// disable counting
+			$s = $this -> db -> prepare('
+				UPDATE users
+				SET calories = 0, countCalories = false
+				WHERE id=:id');
+			$s -> bindParam(':id', $this -> id);
+			return $s -> execute();
+		} else {
+			// enable counting
+			$s = $this -> prepare('
+				UPDATE users
+				SET countCalories = true
+				WHERE id=:id');
+			$s -> bindParam(':id', $this -> id);
+			return $s -> execute();
+		}
+	}
 }
 
 ?>
