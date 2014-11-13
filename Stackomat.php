@@ -585,7 +585,7 @@ class Stackomat {
 		$this -> stackomatPrinter -> printPromptInner();
 		$id = $this -> readInput();
 
-		if (!User::isUndo($this -> db, $id)) {
+		if (!User::isUser($this -> db, $id)) {
 			l('handleToggleCalories: invalid id');
 			throw new UserNotFoundException("Id:t finns inte i databasen.");
 		}
