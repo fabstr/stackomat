@@ -329,8 +329,7 @@ class Stackomat {
 		$calories = array_reduce(
 			$products,
 			function($sum, $e) {
-				$product = Product::fromId($this -> db, $e);
-				$sum += $product -> getCalories();
+				$sum += $e -> getCalories();
 				return $sum;
 			}, 
 			0
