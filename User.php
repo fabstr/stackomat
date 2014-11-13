@@ -238,7 +238,7 @@ class User {
 		$s -> bindParam(':id', $this -> id);
 		$s -> execute();
 		$row = $s -> fetch();
-		if ($row['countCalories'] === true) {
+		if ($row['countCalories'] == 1) {
 			return true;
 		}
 
@@ -257,7 +257,7 @@ class User {
 			// disable counting
 			$s = $this -> db -> prepare('
 				UPDATE users
-				SET calories = 0, countCalories = false
+				SET calories = 0, countCalories = 0
 				WHERE id=:id');
 			$s -> bindParam(':id', $this -> id);
 			return $s -> execute();
@@ -265,7 +265,7 @@ class User {
 			// enable counting
 			$s = $this -> db -> prepare('
 				UPDATE users
-				SET countCalories = true
+				SET countCalories = 1
 				WHERE id=:id');
 			$s -> bindParam(':id', $this -> id);
 			return $s -> execute();
