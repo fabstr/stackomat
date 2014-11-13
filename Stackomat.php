@@ -541,7 +541,7 @@ class Stackomat {
 					."\n");
 			}
 
-			if (!User::addUser($this -> db, $id, '', 0)) {
+			if (!User::addUser($this -> db, $id, '', 0, 0)) {
 				l('adding user couldnt add');
 				throw new DatabaseException('Kunde inte lägga till dig '
 					.'i databasen.');
