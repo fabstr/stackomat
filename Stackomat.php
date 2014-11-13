@@ -597,7 +597,7 @@ class Stackomat {
 			echo "Du räknar inte kalorier. Scanna ditt id igen om du vill aktivera detta.\n";
 		}
 
-		$newid = readInput();
+		$newid = $this -> readInput();
 		if ($id != $newid) {
 			throw new InvalidChecksumException("Id:t matchade inte det första. Var vänlig börja om.\n");
 		}
