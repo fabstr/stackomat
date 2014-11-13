@@ -234,6 +234,16 @@ class Stackomat {
 	}
 
 	/**
+ 	 * Return whether str was a command to toggle calories.
+	 * @param str The command to check.
+	 * @return true if str is a command to toggle calories, else false.
+	 */
+	private function isToggleCalories($str) {
+		l('isToggleCalories ' . $str);
+		return $str == '13370119';
+	}
+
+	/**
          * Return whether str was a command.
 	 * @param str The string to check.
 	 * @return true if str is a command, else false.
@@ -248,6 +258,9 @@ class Stackomat {
 			return true;
 		} else if ($this -> isAddUser($str)) {
 			l('isCommand add user');
+			return true;
+		} else if ($this -> isToggleCalories($str)) {
+			l('isCommand toggle calories');
 			return true;
 		}
 		return false;
@@ -460,7 +473,15 @@ class Stackomat {
 		l('printing balance');
 		$user = new User($this -> db, $id);
 		$balance = $user -> getBalance();
-		echo 'Saldo: ' . $balance . "\n";
+
+		$str = 'Saldo: ' . $balance;
+
+		if ($user -> countsCalories()) {
+			$calories = $user -> getCalories();
+			$str .= "\n" . 'Konsumerade kalorier: ' . $calories;
+		}
+
+		echo $str . "\n";
 	}
 
 	/**
@@ -552,6 +573,43 @@ class Stackomat {
 	}
 
 	/**
+ 	 * Handle toggling of calorie counting.
+	 * First get the user's id.
+	 * If the user is counting, print the option to disble.
+	 * If the user is not counting, print the option to enable.
+	 * Throw an exception if the id is not found or the id didn't match.
+	 */
+	private function handleToggleCalories() {
+		l('toggleCalories');
+		echo "Scanna ditt id för att visa om du räknar kalorier eller inte.\n";
+		$this -> stackomatPrinter -> printPromptInner();
+		$id = $this -> readInput();
+
+		if (!User::isUndo($this -> db, $id)) {
+			l('handleToggleCalories: invalid id');
+			throw new UserNotFoundException("Id:t finns inte i databasen.");
+		}
+
+		$user = new User($this -> db, $id);
+		if ($user -> countsCalories()) {
+			echo "Du räknar kalorier. Scanna ditt id igen om du vill avaktivera detta.\n";
+		} else {
+			echo "Du räknar inte kalorier. Scanna ditt id igen om du vill aktivera detta.\n";
+		}
+
+		$newid = readInput();
+		if ($id != $newid) {
+			throw new InvalidChecksumException("Id:t matchade inte det första. Var vänlig börja om.\n");
+		}
+
+		if ($user -> toggleCalories() === true) {
+			$this -> stackomatPrinter -> printGreen("Ändringen genomfördes.\n");
+		} else {
+			$this -> stackomatPrinter -> printRed("Ändringen kunde inte genomföras.\n");
+		}
+	}
+
+	/**
   	 * Do a round.
 	 * 1. Print the prompt and read input (readinput reconnects to the db if
 	 *    needed).
@@ -584,6 +642,9 @@ class Stackomat {
 				$reading = false;
 			} else if ($this -> isAddUser($action)) {
 				$this -> handleAddUser();
+				$reading = false;
+			} else if ($this -> isToggleCalories($action)) {
+				$this -> handleToggleCalories();
 				$reading = false;
 			} else {
 				if (User::isUser($this -> db, $action)) {
