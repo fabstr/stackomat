@@ -9,13 +9,9 @@ class User {
 	// the id of this user
 	private $id;
 
-	// the amount of calories this user has consumed
-	private $calories;
-
-	public function __construct($db, $id, $calories) {
+	public function __construct($db, $id) {
 		$this -> db = $db;
 		$this -> id = hash('SHA256', $id);
-		$this -> calories = $calories;
 	}
 
 	/**
