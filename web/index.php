@@ -47,7 +47,7 @@ function handleUpdate($db) {
 	$result = false;
 	if ($action == 'Uppdatera') {
 		$s = $db -> prepare('UPDATE products SET name=?, cost=?, calories=? WHERE id=?;');
-		$result = $s -> execute(array($name, $cost, $id, $calories));
+		$result = $s -> execute(array($name, $cost, $calories, $id));
 	} else if ($action == 'Ta bort') {
 		$s = $db -> prepare('DELETE FROM products WHERE id=?;');
 		$result = $s -> execute(array($id));
