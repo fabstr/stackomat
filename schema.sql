@@ -15,7 +15,11 @@ CREATE TABLE users (
 
 	-- the amout of consumed calories
 	calories INTEGER
-		DEFAULT 0
+		DEFAULT 0,
+
+	-- whether the user counts calories
+	countCalories BOOLEAN
+		DEFAULT false
 );
 
 CREATE TABLE products (
