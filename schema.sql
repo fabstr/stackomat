@@ -11,7 +11,11 @@ CREATE TABLE users (
 	-- the user's balance, must not be null
 	balance INTEGER 
 	        NOT NULL 
-	         DEFAULT 0
+	         DEFAULT 0,
+
+	-- the amout of consumed calories
+	calories INTEGER
+		DEFAULT 0
 );
 
 CREATE TABLE products (
@@ -27,7 +31,11 @@ CREATE TABLE products (
 
 	-- the cost of a product, must be set
 	cost INTEGER 
-	     NOT NULL
+	     NOT NULL,
+
+	-- the amount of calories in the product
+	calories INTEGER
+	     DEFAULT 0
 );
 
 CREATE TABLE lastPurchase (
