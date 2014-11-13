@@ -9,9 +9,13 @@ class User {
 	// the id of this user
 	private $id;
 
-	public function __construct($db, $id) {
+	// the amount of calories this user has consumed
+	private $calories;
+
+	public function __construct($db, $id, $calories) {
 		$this -> db = $db;
 		$this -> id = hash('SHA256', $id);
+		$this -> calories = $calories;
 	}
 
 	/**
@@ -21,17 +25,19 @@ class User {
 	 * @param id The id of the user to add.
 	 * @param name The name of the user to add (can be the empty string).
 	 * @param balance The initial balance of the user to add.
+	 * @param calories The initial amount of calories eaten by the user.
 	 * @return true if the user was added successfully, else false.
 	 */
-	public static function addUser($db, $id, $name, $balance)  {
+	public static function addUser($db, $id, $name, $balance, $calories)  {
 		l('add user');
 		$s = $db -> prepare('
 			INSERT INTO users (id, name, balance) 
-			VALUES (:id, :name, :balance)');
+			VALUES (:id, :name, :balance, :calories)');
 		$id = hash('SHA256', $id);
 		$s -> bindParam(':id', $id);
 		$s -> bindParam(':name', $name);
 		$s -> bindParam(':balance', $balance);
+		$s -> bindParam(':calories', $calories);
 		return $s -> execute();
 	}
 
@@ -68,6 +74,21 @@ class User {
 		$s -> execute();
 		$row = $s -> fetch();
 		return $row['name'];
+	}
+
+	/**
+ 	 * Get the amount of calories consumed by this user.
+	 * @return The amount.
+	 */
+	public function getCalories() {
+		$s = $this -> db -> prepare('
+			SELECT calories
+			FROM users
+			WHERE id=:id');
+		$s -> bindParam(':id', $this -> id);
+		$s -> execute();
+		$row = $s -> fetch();
+		return $row['calories'];
 	}
 
 	/**
@@ -190,6 +211,23 @@ class User {
 
 		throw new NoUndoException('Det finns inget köp att ångra. Köp går '
 			.'endast att ångra en gång.');
+	}
+
+	/**
+ 	 * Add (or remove) calories from this user.
+	 * If amount is positive, add calories; if amount is negative, remove
+	 * calories.
+	 * @param amount The calories to add or remove.
+	 * @return true if the change was successfull.
+	 */
+	public function addCalories($amount) {
+		$s = $this -> db -> prepare('
+			UPDATE users
+			SET calories = calories + :amount
+			WHERE id=:id');
+		$s -> bindParam(':amount', $amount);
+		$s -> bindParam(':id', $this -> id);
+		return $s -> execute();
 	}
 }
 
