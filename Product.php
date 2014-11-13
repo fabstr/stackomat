@@ -15,11 +15,15 @@ class Product {
 	// the cost of this product
 	private $cost;
 
-	public function __construct($db, $id, $name, $cost) {
+	// the calories in this product
+	private $calories;
+
+	public function __construct($db, $id, $name, $cost, $calories) {
 		$this -> db = $db;
 		$this -> id = $id;
 		$this -> name = $name;
 		$this -> cost = $cost;
+		$calories -> calories = $calories;
 	}
 
 	/**
@@ -31,11 +35,11 @@ class Product {
 	public static function fromId($db, $id) {
 		l('getting user from id');
 		$product = new self($db, $id, "", 0);
-		$s = $db -> prepare('SELECT name, cost FROM products WHERE id=:id');
+		$s = $db -> prepare('SELECT name, cost, calories FROM products WHERE id=:id');
 		$s -> bindParam(':id', $id);
 		$s -> execute();
 		$row = $s -> fetch();
-		$product = new self($db, $id, $row['name'], $row['cost']);
+		$product = new self($db, $id, $row['name'], $row['cost'], $row['calories']);
 		return $product;
 	}
 
@@ -64,13 +68,14 @@ class Product {
 	 * @param cost The cost of the product.
 	 * @return True if the query was successfull, else false.
 	 */
-	public static function addToDatabase($id, $name, $cost) {
+	public static function addToDatabase($id, $name, $cost, $calories) {
 		$s = $db -> prepare(
 			'INSERT INTO products (id, name, cost)
 			VALUES (:id, :name, :cost)');
 		$s -> bindParam(':id', $id);
 		$s -> bindParam(':name', $name);
 		$s -> bindParam(':cost', $cost);
+		$s -> bindParam(':calories', $calories);
 		return $s -> execute();
 	}
 
@@ -100,6 +105,14 @@ class Product {
 	}
 
 	/**
+ 	 * Get the amount of calories in this product.
+	 * @return The calories.
+	 */
+	public function getCalories() {
+		return $this -> calories;
+	}
+
+	/**
  	 * Change the name of the product.
 	 * @param newName The new name of this product.
 	 * @return true if the change was successfull, else false.
@@ -121,6 +134,19 @@ class Product {
 		$s = $this -> db -> prepare(
 			'UPDATE products SET cost=:cost WHERE id=:id');
 		$s -> bindParam(':cost', $newCost);
+		$s -> bindParam(':id', $this -> id);
+		return $s -> execute();
+	}
+
+	/**
+	 * Change the amout of calories in this product.
+	 * @param newCalories The new amount of calories in this product.
+	 * @return true if the cange was successfull, else false.
+	 */
+	public function changeCalories($newCalories) {
+		$s = $this -> db -> prepare(
+			'UPDATE products SET calories=:calories WHERE id=:id');
+		$s -> bindParam(':calories', $newCalories);
 		$s -> bindParam(':id', $this -> id);
 		return $s -> execute();
 	}
