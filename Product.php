@@ -34,7 +34,7 @@ class Product {
 	 */
 	public static function fromId($db, $id) {
 		l('getting user from id');
-		$product = new self($db, $id, "", 0);
+		$product = new self($db, $id, "", 0, 0);
 		$s = $db -> prepare('SELECT name, cost, calories FROM products WHERE id=:id');
 		$s -> bindParam(':id', $id);
 		$s -> execute();
