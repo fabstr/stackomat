@@ -642,6 +642,7 @@ class Stackomat {
 	}
 
 	public function push($msg) {
+		return;
 		global $pushkey;
 		$title = 'Stackomat';
 		$mac = sha1($title . $msg . $pushkey);
