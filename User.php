@@ -263,7 +263,7 @@ class User {
 			return $s -> execute();
 		} else {
 			// enable counting
-			$s = $this -> prepare('
+			$s = $this -> db -> prepare('
 				UPDATE users
 				SET countCalories = true
 				WHERE id=:id');
