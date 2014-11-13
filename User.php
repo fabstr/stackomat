@@ -27,7 +27,7 @@ class User {
 	public static function addUser($db, $id, $name, $balance, $calories)  {
 		l('add user');
 		$s = $db -> prepare('
-			INSERT INTO users (id, name, balance) 
+			INSERT INTO users (id, name, balance, calories) 
 			VALUES (:id, :name, :balance, :calories)');
 		$id = hash('SHA256', $id);
 		$s -> bindParam(':id', $id);
