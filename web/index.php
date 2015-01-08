@@ -11,7 +11,7 @@ function getInput() {
 	if (!is_string($name)) die();
 	if (!preg_match('/^[0-9]+$/', $cost)) die();
 	if (!preg_match('/^[0-9]+$/', $calories)) die();
-	if (!isset($action) || !($action == 'Uppdatera' || $action == 'Ta bort')) die();
+	if (!isset($action) || !($action == 'Uppdatera' || $action == 'Ta bort')) $action = '';
 	return array(
 		'id' => $id, 
 		'name' => $name, 
@@ -46,8 +46,8 @@ function handleUpdate($db) {
 
 	$result = false;
 	if ($action == 'Uppdatera') {
-		$s = $db -> prepare('UPDATE products SET name=?, cost=?, calories=? WHERE id=?;');
-		$result = $s -> execute(array($name, $cost, $calories, $id));
+		$s = $db -> prepare('UPDATE products SET id=?, SET name=?, cost=?, calories=? WHERE id=?;');
+		$result = $s -> execute(array($id, $name, $cost, $calories, $id));
 	} else if ($action == 'Ta bort') {
 		$s = $db -> prepare('DELETE FROM products WHERE id=?;');
 		$result = $s -> execute(array($id));
@@ -76,7 +76,7 @@ try {
 		$data .= '<tr>';
 		$data .= '<form method="POST" action="index.php?update=true">';
 		$data .= '<input type="hidden" name="id" value="'.htmlentities($row['id']).'">';
-		$data .= '<td><input disabled="disabled" type="text" name="id" value="'.htmlentities($row['id']).'"></td>';
+		$data .= '<td><input type="text" name="id" value="'.htmlentities($row['id']).'"></td>';
 		$data .= '<td><input type="text" name="name" value="'.htmlentities($row['name']).'"></td>';
 		$data .= '<td><input type="text" name="cost" value="'.htmlentities($row['cost']).'"></td>';
 		$data .= '<td><input type="text" name="calories" value="'.htmlentities($row['calories']).'"></td>';
@@ -113,7 +113,7 @@ try {
 
 	<form action="index.php?add=true" method="post">
 	<table>
-		<tr> <td>Produktens streckckod</td> <td><input type="text" name="id" placholder="Streckkod..."></td> </tr>
+		<tr> <td>Produktens streckkod</td> <td><input type="text" name="id" placholder="Streckkod..."></td> </tr>
 		<tr> <td>Produktens namn</td> <td><input name="name" type="text" placholder="Namn..."></td> </tr>
 		<tr> <td>Produktens kostnad</td> <td><input type="text" name="cost"></td> </tr>
 		<tr> <td>Antal kalorier</td> <td><input type="text" name="calories" placholder="Kalorier..."></td> </tr>
