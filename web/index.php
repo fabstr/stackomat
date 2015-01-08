@@ -11,7 +11,7 @@ function getInput() {
 	if (!is_string($name)) die();
 	if (!preg_match('/^[0-9]+$/', $cost)) die();
 	if (!preg_match('/^[0-9]+$/', $calories)) die();
-	if (!(!isset($action) || $action == 'Uppdatera' || $action == 'Ta bort')) die();
+	if (!isset($action) || !($action == 'Uppdatera' || $action == 'Ta bort')) die();
 	return array(
 		'id' => $id, 
 		'name' => $name, 
@@ -113,23 +113,11 @@ try {
 
 	<form action="index.php?add=true" method="post">
 	<table>
-		<tr>
-			<td>Produktens namn</td>
-			<td><input name="name" type="text" placholder="Namn..."></td>
-		</tr>
-		<tr>
-			<td>Produktens kostnad</td>
-			<td><input type="text" name="cost"></td>
-		</tr>
-		<tr>
-			<td>Produktens streckckod</td>
-			<td><input type="text" name="id" placholder="Streckkod..."></td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<input type="submit" value="Lägg till">
-			</td>
-		</tr>
+		<tr> <td>Produktens streckckod</td> <td><input type="text" name="id" placholder="Streckkod..."></td> </tr>
+		<tr> <td>Produktens namn</td> <td><input name="name" type="text" placholder="Namn..."></td> </tr>
+		<tr> <td>Produktens kostnad</td> <td><input type="text" name="cost"></td> </tr>
+		<tr> <td>Antal kalorier</td> <td><input type="text" name="calories" placholder="Kalorier..."></td> </tr>
+		<tr> <td colspan="2"> <input type="submit" value="Lägg till"> </td> </tr>
 	</table>
 
 	</form>
