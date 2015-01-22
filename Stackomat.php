@@ -634,7 +634,8 @@ class Stackomat {
 		$this -> stackomatPrinter -> printPrompt();
 
 		$reading = true;
-			while ($reading === true) {
+		while ($reading === true) {
+			$this -> db = null;
 			$action = $this -> readInput(false);
 			if ($action == 0) return;
 			l('doround got input');
