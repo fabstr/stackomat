@@ -62,6 +62,18 @@ class Product {
 	}
 
 	/**
+ 	 * List all products in the database.
+	 * @param db The pdo handle
+	 * @return An array of associative arrays with the keys 'name' and 'cost'.
+	 */
+	public static function getAll($db) {
+		$l('Product: getAll');
+		$s = $db -> prepare('SELECT name, cost FROM products');
+		$s -> execute();
+		return $s -> fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	/**
  	 * Create and add a product to the database.
 	 * @param id The id of the product to add.
 	 * @param name The name of the product.

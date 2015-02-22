@@ -244,6 +244,16 @@ class Stackomat {
 	}
 
 	/**
+	 * Return true if the command $str is to show all products.
+	 * @param str The command to check
+	 * @return true if str is a command to show all products, else false.
+	 */
+	private function isListProducts($str) {
+		l('isListProducts' . $str);
+		return $str === '13370119';
+	}
+
+	/**
          * Return whether str was a command.
 	 * @param str The string to check.
 	 * @return true if str is a command, else false.
@@ -261,6 +271,9 @@ class Stackomat {
 			return true;
 		} else if ($this -> isToggleCalories($str)) {
 			l('isCommand toggle calories');
+			return true;
+		} else if ($this -> isListProducts($str)) {
+			l('isCommand list products');
 			return true;
 		}
 		return false;
@@ -621,6 +634,19 @@ class Stackomat {
 	}
 
 	/**
+ 	 * Print all products in the database.
+	 * The products are printed on the form
+	 * name (5 kr)
+	 */
+	private function handleListProcts() {
+		$products = Product::getAll($this -> db);
+		echo "Produkter i databasen:\n";
+		foreach ($products as $p) {
+			printf("%s (%d kr)\n", $p['name'], $p['cost']);
+		}
+	}
+
+	/**
   	 * Do a round.
 	 * 1. Print the prompt and read input (readinput reconnects to the db if
 	 *    needed).
@@ -657,6 +683,9 @@ class Stackomat {
 				$reading = false;
 			} else if ($this -> isToggleCalories($action)) {
 				$this -> handleToggleCalories();
+				$reading = false;
+			} else if ($this -> isListProducts($action)) {
+				$this -> handleListProcts();
 				$reading = false;
 			} else {
 				if (User::isUser($this -> db, $action)) {
