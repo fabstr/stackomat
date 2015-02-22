@@ -38,6 +38,7 @@ class StackomatPrinter {
  	 * Print the main prompt.
 	 */
 	public function printPrompt() {
+		echo "Scanna en vara för att köpa eller scanna ditt id för att visa saldo.\n";
 		echo " >> ";
 	}
 
