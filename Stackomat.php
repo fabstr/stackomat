@@ -638,7 +638,7 @@ class Stackomat {
 	 * The products are printed on the form
 	 * name (5 kr)
 	 */
-	private function handleListProcts() {
+	private function handleListProducts() {
 		$products = Product::getAll($this -> db);
 		echo "Produkter i databasen:\n";
 		foreach ($products as $p) {
@@ -685,7 +685,7 @@ class Stackomat {
 				$this -> handleToggleCalories();
 				$reading = false;
 			} else if ($this -> isListProducts($action)) {
-				$this -> handleListProcts();
+				$this -> handleListProducts();
 				$reading = false;
 			} else {
 				if (User::isUser($this -> db, $action)) {
