@@ -1,3 +1,4 @@
 *.sqlite
 
 settings.php
+mfrc22-python/MFRC522.pyc
