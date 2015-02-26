@@ -642,7 +642,7 @@ class Stackomat {
 		$products = Product::getAll($this -> db);
 		echo "Produkter i databasen:\n";
 		foreach ($products as $p) {
-			printf("%s (%d kr)\n", $p['name'], $p['cost']);
+			printf("%2d kr: %s\n", $p['cost'], $p['name']);
 		}
 	}
 
