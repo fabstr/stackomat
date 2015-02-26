@@ -68,7 +68,7 @@ class Product {
 	 */
 	public static function getAll($db) {
 		l('Product: getAll');
-		$s = $db -> prepare('SELECT name, cost FROM products');
+		$s = $db -> prepare('SELECT name, cost FROM products ORDER BY name ASC');
 		$s -> execute();
 		return $s -> fetchAll(PDO::FETCH_ASSOC);
 	}
