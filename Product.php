@@ -67,7 +67,7 @@ class Product {
 	 * @return An array of associative arrays with the keys 'name' and 'cost'.
 	 */
 	public static function getAll($db) {
-		$l('Product: getAll');
+		l('Product: getAll');
 		$s = $db -> prepare('SELECT name, cost FROM products');
 		$s -> execute();
 		return $s -> fetchAll(PDO::FETCH_ASSOC);
