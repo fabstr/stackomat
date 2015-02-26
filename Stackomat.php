@@ -250,7 +250,7 @@ class Stackomat {
 	 */
 	private function isListProducts($str) {
 		l('isListProducts' . $str);
-		return $str === '13370119';
+		return $str === '13370127';
 	}
 
 	/**
